@@ -11,6 +11,8 @@ A Three.js application that creates stunning particle morphing effects between t
 - **Grayscale mode** - toggle monochrome output
 - **Loop mode** - continuous A↔B morphing with pauses
 - **Collapsible UI** - hide controls for fullscreen viewing
+- **Auto BG mode** - automatically adjust settings based on background color
+- **Compact responsive UI** - fits on screen with scroll support
 
 ## Usage
 
@@ -27,18 +29,49 @@ A Three.js application that creates stunning particle morphing effects between t
 
 ## Controls
 
+### Toggles
+
 | Control | Description |
 |---------|-------------|
 | Loop Mode | Continuously morph between images |
 | Smooth Colors | Blend colors during transition |
 | Grayscale | Convert output to monochrome |
+| Auto (for BG) | Auto-adjust settings based on background brightness |
+| Additive Blend | Glow effect (best for dark backgrounds) |
+
+### Sliders
+
+| Control | Range | Description |
+|---------|-------|-------------|
+| Image Scale | 10-100% | Scale of the particle image |
+| Canvas Width | 20-100% | Viewport width percentage |
+| Canvas Height | 20-100% | Viewport height percentage |
+| Opacity | 10-400% | Particle transparency |
+| Brightness | 50-300% | Particle brightness multiplier |
+| Saturation | 0-300% | Color saturation (boost for light backgrounds) |
+
+### Auto BG Mode
+
+When enabled, automatically adjusts settings based on background luminance:
+
+**Light backgrounds** (luminance > 50%):
+- Additive Blend: OFF
+- Saturation: 175%
+- Opacity: 150%
+
+**Dark backgrounds** (luminance <= 50%):
+- Additive Blend: ON
+- Saturation: 100%
+- Opacity: 100%
+
+A green "AUTO BG" indicator appears in the top right corner when active.
 
 ## Technical Details
 
 - **Framework**: Three.js (via CDN)
 - **Particle Count**: 100,000
 - **Easing**: Cubic ease-in-out
-- **Blend Mode**: Additive blending for glow effect
+- **Blend Mode**: Additive or Normal (configurable)
 - **Max Image Size**: 1000px (auto-scaled)
 
 ## Browser Support

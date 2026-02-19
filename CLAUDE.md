@@ -17,24 +17,27 @@ particles-effects/
 
 ### Core Components
 
-**Three.js Scene Setup** (lines 379-459)
+**Three.js Scene Setup**
 - Scene, camera (PerspectiveCamera, z=500), WebGLRenderer
 - Single Points object with ShaderMaterial
+- Configurable canvas size via sliders
 
-**Particle System** (lines 461-520)
+**Particle System**
 - 100,000 particles via BufferGeometry
 - Attributes: position, aStartPosition, aEndPosition, aColorStart, aColorEnd, aRandomOffset
-- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale
+- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale, uOpacity, uBrightness, uSaturation
 
-**Vertex Shader** (lines 311-366)
+**Vertex Shader**
 - Position interpolation with cubic easing
 - Per-particle delay via `aRandomOffset * MAX_DELAY`
 - Swirl/chaos noise during transition
 - Color blending based on progress
 
-**Fragment Shader** (lines 368-377)
+**Fragment Shader**
 - Circular particles with soft edges
 - Alpha falloff via smoothstep
+- Brightness multiplier
+- Saturation adjustment via grayscale luminance mix
 
 ### Animation Flow
 
@@ -51,6 +54,18 @@ particles-effects/
 | `MORPH_SPEED` | 0.012 - progress increment per frame |
 | `MAX_DELAY` | 0.3 - max stagger delay (30% of progress) |
 | `PAUSE_DURATION` | 120 frames between morphs in loop mode |
+| `imageScale` | 0.9 - scale factor for particle images |
+| `autoMode` | false - auto-adjust settings based on background |
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `getLuminance(hexColor)` | Calculate perceived brightness of hex color |
+| `applyAutoSettings(hexColor)` | Auto-adjust blend/saturation/opacity based on BG |
+| `reprocessImages()` | Re-scale images when scale slider changes |
+| `updateCanvasSize()` | Resize canvas when width/height sliders change |
+| `cleanup()` | Revoke object URLs and dispose Three.js resources |
 
 ## Dependencies
 
@@ -62,6 +77,8 @@ particles-effects/
 - Uses ES modules for Three.js import
 - No external CSS or JS files needed
 - Images processed via canvas getImageData()
+- Object URLs used for image loading (cleaned up on page unload)
+- Compact UI with max-height and overflow scroll for smaller screens
 
 ## Potential Enhancements
 
