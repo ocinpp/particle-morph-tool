@@ -334,6 +334,52 @@
         border-radius: 2px;
       }
 
+      /* ACCORDION STYLES */
+      .accordion {
+        margin-bottom: 6px;
+      }
+
+      .accordion-header {
+        width: 100%;
+        background: rgba(0, 170, 255, 0.1);
+        border: 1px solid rgba(0, 170, 255, 0.2);
+        color: #0af;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        font-weight: bold;
+        margin-bottom: 4px;
+        transition: all 0.2s;
+      }
+
+      .accordion-header:hover {
+        background: rgba(0, 170, 255, 0.15);
+        border-color: rgba(0, 170, 255, 0.3);
+      }
+
+      .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.2s ease-out;
+      }
+
+      .accordion-section.open .accordion-content {
+        max-height: 300px;
+      }
+
+      .accordion-section.open .arrow {
+        transform: rotate(90deg);
+      }
+
+      .arrow {
+        transition: transform 0.2s;
+        font-size: 9px;
+      }
+
       /* Auto mode indicator */
       #autoIndicator {
         position: fixed;
@@ -371,134 +417,152 @@
         </button>
       </div>
 
-      <div class="input-group">
-        <label>Image A (Start Shape)</label>
-        <input type="file" id="imgA" accept="image/*" />
-      </div>
-
-      <div class="input-group">
-        <label>Image B (Target Shape)</label>
-        <input type="file" id="imgB" accept="image/*" />
-      </div>
-
-      <!-- OPTIONS GROUP -->
-      <div style="margin-bottom: 6px">
-        <div class="toggle-container">
-          <span class="toggle-label">Loop Mode:</span>
-          <label class="switch">
-            <input type="checkbox" id="loopToggle" checked />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="toggle-container">
-          <span class="toggle-label">Smooth Colors:</span>
-          <label class="switch">
-            <input type="checkbox" id="colorToggle" checked />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="toggle-container">
-          <span class="toggle-label">Grayscale:</span>
-          <label class="switch">
-            <input type="checkbox" id="grayToggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="toggle-container">
-          <span class="toggle-label">Auto (for BG):</span>
-          <label class="switch">
-            <input type="checkbox" id="autoToggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="toggle-container">
-          <span class="toggle-label">Additive Blend:</span>
-          <label class="switch">
-            <input type="checkbox" id="blendToggle" checked />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Image Scale:</span>
-            <span class="slider-value" id="scaleValue">90%</span>
+      <!-- ACCORDION SECTIONS -->
+      <div class="accordion">
+        <!-- Section 1: Images (expanded by default) -->
+        <div class="accordion-section open">
+          <button class="accordion-header" type="button">Images <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="input-group">
+              <label>Image A (Start Shape)</label>
+              <input type="file" id="imgA" accept="image/*" />
+            </div>
+            <div class="input-group">
+              <label>Image B (Target Shape)</label>
+              <input type="file" id="imgB" accept="image/*" />
+            </div>
           </div>
-          <input type="range" id="scaleSlider" min="10" max="100" value="90" />
         </div>
 
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Canvas Width:</span>
-            <span class="slider-value" id="widthValue">100%</span>
+        <!-- Section 2: Animation -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Animation <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="toggle-container">
+              <span class="toggle-label">Loop Mode:</span>
+              <label class="switch">
+                <input type="checkbox" id="loopToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Smooth Colors:</span>
+              <label class="switch">
+                <input type="checkbox" id="colorToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
-          <input type="range" id="widthSlider" min="20" max="100" value="100" />
         </div>
 
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Canvas Height:</span>
-            <span class="slider-value" id="heightValue">100%</span>
+        <!-- Section 3: Visual FX -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Visual FX <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="toggle-container">
+              <span class="toggle-label">Grayscale:</span>
+              <label class="switch">
+                <input type="checkbox" id="grayToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Additive Blend:</span>
+              <label class="switch">
+                <input type="checkbox" id="blendToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Opacity:</span>
+                <span class="slider-value" id="opacityValue">100%</span>
+              </div>
+              <input type="range" id="opacitySlider" min="10" max="400" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Brightness:</span>
+                <span class="slider-value" id="brightnessValue">100%</span>
+              </div>
+              <input type="range" id="brightnessSlider" min="50" max="300" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Saturation:</span>
+                <span class="slider-value" id="saturationValue">100%</span>
+              </div>
+              <input type="range" id="saturationSlider" min="0" max="300" value="100" />
+            </div>
           </div>
-          <input type="range" id="heightSlider" min="20" max="100" value="100" />
         </div>
 
-        <div class="toggle-container">
-          <span class="toggle-label">Background:</span>
-          <input type="color" id="bgColorPicker" value="#111111" />
-        </div>
-
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Opacity:</span>
-            <span class="slider-value" id="opacityValue">100%</span>
+        <!-- Section 4: Mouse Interaction -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Mouse Interaction <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="toggle-container">
+              <span class="toggle-label">Mouse Mode:</span>
+              <select id="mouseModeSelect" style="background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 3px 6px; font-size: 11px;">
+                <option value="0">Off</option>
+                <option value="1">Attract</option>
+                <option value="2">Repel</option>
+              </select>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Mouse Radius:</span>
+                <span class="slider-value" id="mouseRadiusValue">100</span>
+              </div>
+              <input type="range" id="mouseRadiusSlider" min="20" max="300" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Mouse Strength:</span>
+                <span class="slider-value" id="mouseStrengthValue">30</span>
+              </div>
+              <input type="range" id="mouseStrengthSlider" min="5" max="100" value="30" />
+            </div>
           </div>
-          <input type="range" id="opacitySlider" min="10" max="400" value="100" />
         </div>
 
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Brightness:</span>
-            <span class="slider-value" id="brightnessValue">100%</span>
+        <!-- Section 5: Canvas -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Canvas <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Image Scale:</span>
+                <span class="slider-value" id="scaleValue">90%</span>
+              </div>
+              <input type="range" id="scaleSlider" min="10" max="100" value="90" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Canvas Width:</span>
+                <span class="slider-value" id="widthValue">100%</span>
+              </div>
+              <input type="range" id="widthSlider" min="20" max="100" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Canvas Height:</span>
+                <span class="slider-value" id="heightValue">100%</span>
+              </div>
+              <input type="range" id="heightSlider" min="20" max="100" value="100" />
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Background:</span>
+              <input type="color" id="bgColorPicker" value="#111111" />
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Auto (for BG):</span>
+              <label class="switch">
+                <input type="checkbox" id="autoToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
-          <input type="range" id="brightnessSlider" min="50" max="300" value="100" />
-        </div>
-
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Saturation:</span>
-            <span class="slider-value" id="saturationValue">100%</span>
-          </div>
-          <input type="range" id="saturationSlider" min="0" max="300" value="100" />
-        </div>
-
-        <div class="toggle-container">
-          <span class="toggle-label">Mouse Mode:</span>
-          <select id="mouseModeSelect" style="background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 3px 6px; font-size: 11px;">
-            <option value="0">Off</option>
-            <option value="1">Attract</option>
-            <option value="2">Repel</option>
-          </select>
-        </div>
-
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Mouse Radius:</span>
-            <span class="slider-value" id="mouseRadiusValue">100</span>
-          </div>
-          <input type="range" id="mouseRadiusSlider" min="20" max="300" value="100" />
-        </div>
-
-        <div class="slider-container">
-          <div class="slider-header">
-            <span class="slider-label">Mouse Strength:</span>
-            <span class="slider-value" id="mouseStrengthValue">30</span>
-          </div>
-          <input type="range" id="mouseStrengthSlider" min="5" max="100" value="30" />
         </div>
       </div>
 
@@ -796,6 +860,14 @@
         restoreBtn.addEventListener("click", () => {
           uiPanel.classList.remove("hidden");
           restoreBtn.style.display = "none";
+        });
+
+        // Accordion toggle
+        document.querySelectorAll(".accordion-header").forEach((header) => {
+          header.addEventListener("click", () => {
+            const section = header.parentElement;
+            section.classList.toggle("open");
+          });
         });
 
         // Background Color Picker
