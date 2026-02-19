@@ -11,10 +11,15 @@
         background: #111;
         color: white;
         font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
       }
       #canvas-container {
         width: 100vw;
         height: 100vh;
+        transition: width 0.3s, height 0.3s;
       }
 
       /* RESTORE BUTTON (Visible when panel is hidden) */
@@ -41,13 +46,15 @@
 
       #ui {
         position: absolute;
-        top: 20px;
-        left: 20px;
+        top: 10px;
+        left: 10px;
         background: rgba(0, 0, 0, 0.9);
-        padding: 20px;
-        border-radius: 12px;
+        padding: 12px;
+        border-radius: 10px;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        max-width: 320px;
+        max-width: 280px;
+        max-height: calc(100vh - 20px);
+        overflow-y: auto;
         z-index: 10;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         transition:
@@ -67,12 +74,12 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
       }
 
       h2 {
         margin: 0;
-        font-size: 20px;
+        font-size: 16px;
         color: #0af;
         text-align: left;
       }
@@ -82,12 +89,12 @@
         background: transparent;
         border: 1px solid #444;
         color: #888;
-        width: 30px;
-        height: 30px;
-        border-radius: 6px;
+        width: 24px;
+        height: 24px;
+        border-radius: 5px;
         cursor: pointer;
-        font-size: 18px;
-        line-height: 18px;
+        font-size: 16px;
+        line-height: 16px;
         padding: 0;
         transition: all 0.2s;
       }
@@ -97,20 +104,20 @@
       }
 
       .input-group {
-        margin-bottom: 15px;
+        margin-bottom: 8px;
       }
       label {
         display: block;
-        font-size: 12px;
-        margin-bottom: 5px;
+        font-size: 11px;
+        margin-bottom: 3px;
         color: #aaa;
       }
 
       input[type="file"] {
-        font-size: 12px;
+        font-size: 10px;
         color: white;
         background: #222;
-        padding: 5px;
+        padding: 4px;
         border-radius: 4px;
         width: 100%;
         box-sizing: border-box;
@@ -121,22 +128,22 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         background: #222;
-        padding: 8px 10px;
-        border-radius: 6px;
+        padding: 5px 8px;
+        border-radius: 5px;
       }
 
       .toggle-label {
-        font-size: 13px;
+        font-size: 11px;
         font-weight: bold;
       }
 
       .switch {
         position: relative;
         display: inline-block;
-        width: 50px;
-        height: 26px;
+        width: 40px;
+        height: 20px;
       }
 
       .switch input {
@@ -154,16 +161,16 @@
         bottom: 0;
         background-color: #555;
         transition: 0.4s;
-        border-radius: 26px;
+        border-radius: 20px;
       }
 
       .slider:before {
         position: absolute;
         content: "";
-        height: 18px;
-        width: 18px;
-        left: 4px;
-        bottom: 4px;
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
         background-color: white;
         transition: 0.4s;
         border-radius: 50%;
@@ -173,20 +180,20 @@
         background-color: #0af;
       }
       input:checked + .slider:before {
-        transform: translateX(24px);
+        transform: translateX(20px);
       }
 
       button.action-btn {
         width: 100%;
-        padding: 15px;
-        font-size: 16px;
+        padding: 10px;
+        font-size: 13px;
         font-weight: bold;
         cursor: pointer;
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         transition: all 0.2s;
         text-transform: uppercase;
-        margin-top: 10px;
+        margin-top: 6px;
       }
 
       button.start-state {
@@ -201,24 +208,119 @@
       }
 
       #status-container {
-        margin-top: 15px;
+        margin-top: 8px;
         background: #000;
-        padding: 10px;
-        border-radius: 6px;
+        padding: 6px;
+        border-radius: 5px;
         border: 1px solid #333;
         text-align: center;
       }
 
       #status-text {
-        font-size: 18px;
+        font-size: 12px;
         font-weight: bold;
         color: #0f0;
+      }
+
+      /* SLIDER STYLES */
+      .slider-container {
+        margin-bottom: 4px;
+        background: #222;
+        padding: 5px 8px;
+        border-radius: 5px;
+      }
+
+      .slider-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3px;
+      }
+
+      .slider-label {
+        font-size: 11px;
+        font-weight: bold;
+      }
+
+      .slider-value {
+        font-size: 10px;
+        color: #0af;
+        font-weight: bold;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        height: 4px;
+        -webkit-appearance: none;
+        background: #444;
+        border-radius: 2px;
+        outline: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        background: #0af;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        background: #0af;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
+
+      input[type="color"] {
+        width: 32px;
+        height: 20px;
+        padding: 0;
+        border: 2px solid #444;
+        border-radius: 3px;
+        cursor: pointer;
+        background: transparent;
+      }
+
+      input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: 2px;
+      }
+
+      /* Auto mode indicator */
+      #autoIndicator {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #0f0;
+        color: #000;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: none;
+        z-index: 100;
+        box-shadow: 0 2px 8px rgba(0, 255, 0, 0.4);
+      }
+
+      #autoIndicator.visible {
+        display: block;
       }
     </style>
   </head>
   <body>
     <!-- BUTTON TO RESTORE UI -->
     <button id="restoreBtn" title="Show Controls">+</button>
+
+    <!-- AUTO MODE INDICATOR -->
+    <div id="autoIndicator">AUTO BG</div>
 
     <div id="ui">
       <!-- HEADER WITH COLLAPSE BUTTON -->
@@ -240,7 +342,7 @@
       </div>
 
       <!-- OPTIONS GROUP -->
-      <div style="margin-bottom: 10px">
+      <div style="margin-bottom: 6px">
         <div class="toggle-container">
           <span class="toggle-label">Loop Mode:</span>
           <label class="switch">
@@ -263,6 +365,75 @@
             <input type="checkbox" id="grayToggle" />
             <span class="slider"></span>
           </label>
+        </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Auto (for BG):</span>
+          <label class="switch">
+            <input type="checkbox" id="autoToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Additive Blend:</span>
+          <label class="switch">
+            <input type="checkbox" id="blendToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Image Scale:</span>
+            <span class="slider-value" id="scaleValue">90%</span>
+          </div>
+          <input type="range" id="scaleSlider" min="10" max="100" value="90" />
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Canvas Width:</span>
+            <span class="slider-value" id="widthValue">100%</span>
+          </div>
+          <input type="range" id="widthSlider" min="20" max="100" value="100" />
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Canvas Height:</span>
+            <span class="slider-value" id="heightValue">100%</span>
+          </div>
+          <input type="range" id="heightSlider" min="20" max="100" value="100" />
+        </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Background:</span>
+          <input type="color" id="bgColorPicker" value="#111111" />
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Opacity:</span>
+            <span class="slider-value" id="opacityValue">100%</span>
+          </div>
+          <input type="range" id="opacitySlider" min="10" max="400" value="100" />
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Brightness:</span>
+            <span class="slider-value" id="brightnessValue">100%</span>
+          </div>
+          <input type="range" id="brightnessSlider" min="50" max="300" value="100" />
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Saturation:</span>
+            <span class="slider-value" id="saturationValue">100%</span>
+          </div>
+          <input type="range" id="saturationSlider" min="0" max="300" value="100" />
         </div>
       </div>
 
@@ -299,8 +470,17 @@
       let loopMode = true;
       let smoothColors = true;
       let useGrayscale = false;
+      let autoMode = false;
       let progress = 0;
       let currentTarget = "B";
+
+      let imageScale = 0.9;
+      let canvasWidthPercent = 100;
+      let canvasHeightPercent = 100;
+
+      // Cached object URLs for cleanup
+      let objectUrlA = null;
+      let objectUrlB = null;
 
       let pauseCounter = 0;
       const PAUSE_DURATION = 120;
@@ -367,12 +547,23 @@
 
       const fragmentShader = `
             varying vec3 vColor;
+            uniform float uOpacity;
+            uniform float uBrightness;
+            uniform float uSaturation;
 
             void main() {
                 float dist = length(gl_PointCoord - vec2(0.5));
                 if (dist > 0.5) discard;
-                float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
-                gl_FragColor = vec4(vColor, alpha);
+                float alpha = (1.0 - smoothstep(0.3, 0.5, dist)) * uOpacity;
+
+                // Apply brightness
+                vec3 color = vColor * uBrightness;
+
+                // Apply saturation (grayscale luminance mix)
+                float gray = dot(color, vec3(0.299, 0.587, 0.114));
+                color = mix(vec3(gray), color, uSaturation);
+
+                gl_FragColor = vec4(color, alpha);
             }
         `;
 
@@ -440,6 +631,72 @@
                 : 0.0;
           });
 
+        document
+          .getElementById("blendToggle")
+          .addEventListener("change", (e) => {
+            if (particles) {
+              particles.material.blending = e.target.checked
+                ? THREE.AdditiveBlending
+                : THREE.NormalBlending;
+            }
+          });
+
+        // Scale Slider
+        document
+          .getElementById("scaleSlider")
+          .addEventListener("input", (e) => {
+            imageScale = e.target.value / 100;
+            document.getElementById("scaleValue").textContent = e.target.value + "%";
+            reprocessImages();
+          });
+
+        // Canvas Size Sliders
+        document
+          .getElementById("widthSlider")
+          .addEventListener("input", (e) => {
+            canvasWidthPercent = e.target.value;
+            document.getElementById("widthValue").textContent = e.target.value + "%";
+            updateCanvasSize();
+          });
+
+        document
+          .getElementById("heightSlider")
+          .addEventListener("input", (e) => {
+            canvasHeightPercent = e.target.value;
+            document.getElementById("heightValue").textContent = e.target.value + "%";
+            updateCanvasSize();
+          });
+
+        // Opacity Slider
+        document
+          .getElementById("opacitySlider")
+          .addEventListener("input", (e) => {
+            const opacity = e.target.value / 100;
+            document.getElementById("opacityValue").textContent = e.target.value + "%";
+            if (particles)
+              particles.material.uniforms.uOpacity.value = opacity;
+          });
+
+        // Brightness Slider
+        document
+          .getElementById("brightnessSlider")
+          .addEventListener("input", (e) => {
+            const brightness = e.target.value / 100;
+            document.getElementById("brightnessValue").textContent = e.target.value + "%";
+            if (particles)
+              particles.material.uniforms.uBrightness.value = brightness;
+          });
+
+        // Saturation Slider
+        document
+          .getElementById("saturationSlider")
+          .addEventListener("input", (e) => {
+            const saturation = e.target.value / 100;
+            document.getElementById("saturationValue").textContent = e.target.value + "%";
+            if (particles)
+              particles.material.uniforms.uSaturation.value = saturation;
+          });
+
         // UI Collapse Logic
         const uiPanel = document.getElementById("ui");
         const restoreBtn = document.getElementById("restoreBtn");
@@ -455,7 +712,57 @@
           restoreBtn.style.display = "none";
         });
 
+        // Background Color Picker
+        document
+          .getElementById("bgColorPicker")
+          .addEventListener("input", (e) => {
+            const color = e.target.value;
+            document.body.style.background = color;
+            scene.background.setStyle(color);
+            if (autoMode) {
+              applyAutoSettings(color);
+            }
+          });
+
+        // Auto Mode Toggle
+        document
+          .getElementById("autoToggle")
+          .addEventListener("change", (e) => {
+            autoMode = e.target.checked;
+            const indicator = document.getElementById("autoIndicator");
+            if (autoMode) {
+              indicator.classList.add("visible");
+              applyAutoSettings(document.getElementById("bgColorPicker").value);
+            } else {
+              indicator.classList.remove("visible");
+            }
+          });
+
+        // Cleanup on page unload
+        window.addEventListener("beforeunload", cleanup);
+
         animate();
+      }
+
+      function cleanup() {
+        // Revoke object URLs
+        if (objectUrlA) {
+          URL.revokeObjectURL(objectUrlA);
+          objectUrlA = null;
+        }
+        if (objectUrlB) {
+          URL.revokeObjectURL(objectUrlB);
+          objectUrlB = null;
+        }
+
+        // Dispose Three.js resources
+        if (particles) {
+          particles.geometry.dispose();
+          particles.material.dispose();
+        }
+        if (renderer) {
+          renderer.dispose();
+        }
       }
 
       function createParticleSystem() {
@@ -509,6 +816,9 @@
             uTime: { value: 0.0 },
             uSmoothColors: { value: 1.0 },
             uGrayscale: { value: 0.0 },
+            uOpacity: { value: 1.0 },
+            uBrightness: { value: 1.0 },
+            uSaturation: { value: 1.0 },
           },
           transparent: true,
           depthWrite: false,
@@ -552,7 +862,7 @@
 
         const scaleX = vWidth / contentWidth;
         const scaleY = vHeight / contentHeight;
-        const scale = Math.min(scaleX, scaleY) * 0.9;
+        const scale = Math.min(scaleX, scaleY) * imageScale;
 
         const centerX = minX + contentWidth / 2;
         const centerY = minY + contentHeight / 2;
@@ -605,61 +915,75 @@
 
         updateStatus("Processing...");
 
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const img = new Image();
-          img.onload = function () {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
+        // Revoke old object URL if exists
+        if (type === "A" && objectUrlA) {
+          URL.revokeObjectURL(objectUrlA);
+        } else if (type === "B" && objectUrlB) {
+          URL.revokeObjectURL(objectUrlB);
+        }
 
-            let w = img.width;
-            let h = img.height;
-            const maxDim = 1000;
-            if (w > maxDim || h > maxDim) {
-              const ratio = Math.min(maxDim / w, maxDim / h);
-              w *= ratio;
-              h *= ratio;
-            }
+        // Create and cache new object URL
+        const objectUrl = URL.createObjectURL(file);
+        if (type === "A") {
+          objectUrlA = objectUrl;
+        } else {
+          objectUrlB = objectUrl;
+        }
 
-            canvas.width = w;
-            canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            const data = ctx.getImageData(0, 0, w, h);
-            const imgDataObj = { data: data.data, width: w, height: h };
+        const img = new Image();
+        img.onload = function () {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
 
-            const buffers = getImageBuffers(imgDataObj);
+          let w = img.width;
+          let h = img.height;
+          const maxDim = 1000;
+          if (w > maxDim || h > maxDim) {
+            const ratio = Math.min(maxDim / w, maxDim / h);
+            w *= ratio;
+            h *= ratio;
+          }
 
-            if (type === "A") {
-              cachedPosA = buffers.positions;
-              cachedColA = buffers.colors;
+          canvas.width = w;
+          canvas.height = h;
+          ctx.drawImage(img, 0, 0, w, h);
+          const data = ctx.getImageData(0, 0, w, h);
+          const imgDataObj = { data: data.data, width: w, height: h };
 
-              particles.geometry.attributes.aStartPosition.array.set(
-                cachedPosA,
-              );
-              particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
-              particles.geometry.attributes.aColorStart.array.set(cachedColA);
-              particles.geometry.attributes.aColorEnd.array.set(cachedColA);
+          const buffers = getImageBuffers(imgDataObj);
 
-              particles.geometry.attributes.aStartPosition.needsUpdate = true;
-              particles.geometry.attributes.aEndPosition.needsUpdate = true;
-              particles.geometry.attributes.aColorStart.needsUpdate = true;
-              particles.geometry.attributes.aColorEnd.needsUpdate = true;
+          if (type === "A") {
+            cachedPosA = buffers.positions;
+            cachedColA = buffers.colors;
 
-              particles.material.uniforms.uProgress.value = 1.0;
+            particles.geometry.attributes.aStartPosition.array.set(
+              cachedPosA,
+            );
+            particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
+            particles.geometry.attributes.aColorStart.array.set(cachedColA);
+            particles.geometry.attributes.aColorEnd.array.set(cachedColA);
 
-              currentTarget = "B";
-              progress = 1.0;
+            particles.geometry.attributes.aStartPosition.needsUpdate = true;
+            particles.geometry.attributes.aEndPosition.needsUpdate = true;
+            particles.geometry.attributes.aColorStart.needsUpdate = true;
+            particles.geometry.attributes.aColorEnd.needsUpdate = true;
 
-              updateStatus("Ready at Image A");
-            } else {
-              cachedPosB = buffers.positions;
-              cachedColB = buffers.colors;
-              updateStatus("Ready at Image A");
-            }
-          };
-          img.src = e.target.result;
+            particles.material.uniforms.uProgress.value = 1.0;
+
+            currentTarget = "B";
+            progress = 1.0;
+
+            updateStatus("Ready at Image A");
+          } else {
+            cachedPosB = buffers.positions;
+            cachedColB = buffers.colors;
+            updateStatus("Ready at Image A");
+          }
+
+          // Clean up Image object
+          img.onload = null;
         };
-        reader.readAsDataURL(file);
+        img.src = objectUrl;
       }
 
       function handleButtonClick() {
@@ -703,6 +1027,57 @@
 
       function updateStatus(msg) {
         document.getElementById("status-text").innerText = msg;
+      }
+
+      // Calculate luminance from hex color
+      function getLuminance(hexColor) {
+        const hex = hexColor.replace("#", "");
+        const r = parseInt(hex.substr(0, 2), 16) / 255;
+        const g = parseInt(hex.substr(2, 2), 16) / 255;
+        const b = parseInt(hex.substr(4, 2), 16) / 255;
+        return 0.299 * r + 0.587 * g + 0.114 * b;
+      }
+
+      // Apply automatic settings based on background brightness
+      function applyAutoSettings(hexColor) {
+        if (!particles) return;
+
+        const luminance = getLuminance(hexColor);
+        const isLightBg = luminance > 0.5;
+
+        // Settings for light vs dark backgrounds
+        const settings = isLightBg ? {
+          additive: false,
+          brightness: 100,
+          saturation: 175,
+          opacity: 150
+        } : {
+          additive: true,
+          brightness: 100,
+          saturation: 100,
+          opacity: 100
+        };
+
+        // Update blending
+        particles.material.blending = settings.additive
+          ? THREE.AdditiveBlending
+          : THREE.NormalBlending;
+        document.getElementById("blendToggle").checked = settings.additive;
+
+        // Update brightness
+        particles.material.uniforms.uBrightness.value = settings.brightness / 100;
+        document.getElementById("brightnessSlider").value = settings.brightness;
+        document.getElementById("brightnessValue").textContent = settings.brightness + "%";
+
+        // Update saturation
+        particles.material.uniforms.uSaturation.value = settings.saturation / 100;
+        document.getElementById("saturationSlider").value = settings.saturation;
+        document.getElementById("saturationValue").textContent = settings.saturation + "%";
+
+        // Update opacity
+        particles.material.uniforms.uOpacity.value = settings.opacity / 100;
+        document.getElementById("opacitySlider").value = settings.opacity;
+        document.getElementById("opacityValue").textContent = settings.opacity + "%";
       }
 
       function swapBuffers() {
@@ -761,10 +1136,83 @@
         renderer.render(scene, camera);
       }
 
-      function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
+      function updateCanvasSize() {
+        const width = window.innerWidth * (canvasWidthPercent / 100);
+        const height = window.innerHeight * (canvasHeightPercent / 100);
+        const container = document.getElementById("canvas-container");
+
+        container.style.width = width + "px";
+        container.style.height = height + "px";
+
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(width, height);
+      }
+
+      // Reusable canvas for image processing
+      const processCanvas = document.createElement("canvas");
+      const processCtx = processCanvas.getContext("2d");
+
+      function reprocessImages() {
+        function processImage(file, type) {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = function() {
+              let w = img.width;
+              let h = img.height;
+              const maxDim = 1000;
+              if (w > maxDim || h > maxDim) {
+                const ratio = Math.min(maxDim / w, maxDim / h);
+                w *= ratio;
+                h *= ratio;
+              }
+              processCanvas.width = w;
+              processCanvas.height = h;
+              processCtx.clearRect(0, 0, w, h);
+              processCtx.drawImage(img, 0, 0, w, h);
+              const data = processCtx.getImageData(0, 0, w, h);
+              const buffers = getImageBuffers({ data: data.data, width: w, height: h });
+
+              if (type === "A") {
+                cachedPosA = buffers.positions;
+                cachedColA = buffers.colors;
+
+                if (currentTarget === "B" && !isPlaying) {
+                  particles.geometry.attributes.aStartPosition.array.set(cachedPosA);
+                  particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
+                  particles.geometry.attributes.aColorStart.array.set(cachedColA);
+                  particles.geometry.attributes.aColorEnd.array.set(cachedColA);
+                  particles.geometry.attributes.aStartPosition.needsUpdate = true;
+                  particles.geometry.attributes.aEndPosition.needsUpdate = true;
+                  particles.geometry.attributes.aColorStart.needsUpdate = true;
+                  particles.geometry.attributes.aColorEnd.needsUpdate = true;
+                }
+              } else {
+                cachedPosB = buffers.positions;
+                cachedColB = buffers.colors;
+              }
+              img.onload = null;
+              resolve();
+            };
+            img.src = file;
+          });
+        }
+
+        // Process both images using cached URLs
+        if (objectUrlA) {
+          processImage(objectUrlA, "A");
+        }
+        if (objectUrlB) {
+          processImage(objectUrlB, "B");
+        }
+      }
+
+      function onWindowResize() {
+        const width = window.innerWidth * (canvasWidthPercent / 100);
+        const height = window.innerHeight * (canvasHeightPercent / 100);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
       }
 
       init();
