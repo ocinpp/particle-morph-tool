@@ -27,39 +27,64 @@
         position: absolute;
         top: 20px;
         left: 20px;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(20, 30, 40, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         color: #0af;
-        border: 1px solid #0af;
+        border: 1px solid rgba(0, 170, 255, 0.3);
         padding: 10px 15px;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
         font-weight: bold;
         font-size: 18px;
         z-index: 5;
         display: none; /* Hidden by default */
         transition: all 0.3s;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       }
       #restoreBtn:hover {
-        background: #0af;
-        color: #000;
+        background: rgba(0, 170, 255, 0.2);
+        border-color: rgba(0, 170, 255, 0.5);
+        box-shadow: 0 4px 30px rgba(0, 170, 255, 0.2);
       }
 
       #ui {
         position: absolute;
         top: 10px;
         left: 10px;
-        background: rgba(0, 0, 0, 0.9);
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+
+        /* Glassmorphism */
+        background: linear-gradient(
+          135deg,
+          rgba(20, 30, 40, 0.75) 0%,
+          rgba(10, 20, 30, 0.85) 100%
+        );
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+
+        /* Border with subtle glow */
+        border: 1px solid rgba(0, 170, 255, 0.2);
+        border-radius: 12px;
+
+        /* Soft outer glow */
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.4),
+          0 0 60px rgba(0, 170, 255, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+        padding: 14px;
         max-width: 280px;
         max-height: calc(100vh - 20px);
         overflow-y: auto;
         z-index: 10;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        transition:
-          transform 0.3s ease,
-          opacity 0.3s ease;
+        transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      #ui:hover {
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.5),
+          0 0 80px rgba(0, 170, 255, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
 
       /* Class to hide the UI */
@@ -82,6 +107,7 @@
         font-size: 16px;
         color: #0af;
         text-align: left;
+        text-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
       }
 
       /* COLLAPSE BUTTON */
@@ -129,9 +155,16 @@
         align-items: center;
         justify-content: space-between;
         margin-bottom: 4px;
-        background: #222;
+        background: rgba(255, 255, 255, 0.05);
         padding: 5px 8px;
-        border-radius: 5px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background 0.2s, border-color 0.2s;
+      }
+
+      .toggle-container:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(0, 170, 255, 0.2);
       }
 
       .toggle-label {
@@ -225,9 +258,16 @@
       /* SLIDER STYLES */
       .slider-container {
         margin-bottom: 4px;
-        background: #222;
+        background: rgba(255, 255, 255, 0.05);
         padding: 5px 8px;
-        border-radius: 5px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background 0.2s, border-color 0.2s;
+      }
+
+      .slider-container:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(0, 170, 255, 0.2);
       }
 
       .slider-header {
