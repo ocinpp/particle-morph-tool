@@ -8,11 +8,12 @@ This document covers all the concepts, techniques, and patterns you can learn fr
 2. [GLSL Shaders](#glsl-shaders)
 3. [Particle Systems](#particle-systems)
 4. [Animation Techniques](#animation-techniques)
-5. [Color Theory in Shaders](#color-theory-in-shaders)
-6. [Memory Management](#memory-management)
-7. [JavaScript Patterns](#javascript-patterns)
-8. [CSS/UI Techniques](#cssui-techniques)
-9. [Mathematical Concepts](#mathematical-concepts)
+5. [Mouse Interaction](#mouse-interaction)
+6. [Color Theory in Shaders](#color-theory-in-shaders)
+7. [Memory Management](#memory-management)
+8. [JavaScript Patterns](#javascript-patterns)
+9. [CSS/UI Techniques](#cssui-techniques)
+10. [Mathematical Concepts](#mathematical-concepts)
 
 ---
 
@@ -153,6 +154,8 @@ void main() {
 | `dot(a, b)` | Dot product |
 | `fract(x)` | Fractional part |
 | `sin(x)`, `cos(x)` | Trigonometry |
+| `atan(y, x)` | Arc tangent (returns angle) |
+| `normalize(v)` | Convert to unit vector |
 
 ---
 
@@ -261,6 +264,104 @@ function animate() {
 - `requestAnimationFrame` syncs to monitor refresh rate (~60fps)
 - Progress goes slightly past 1.0 to account for stagger delays
 - Update uniforms to pass values to shaders each frame
+
+### Transition Effects in Shaders
+
+The vertex shader supports multiple transition effects controlled by a uniform:
+
+```glsl
+uniform float uTransitionMode;  // 0=default, 1=spiral, 2=explosion, 3=gravity
+
+// Apply effect based on mode
+if (uTransitionMode < 0.5) {
+    // DEFAULT: chaos/swirl effect
+    float chaosPower = sin(p * 3.14159) * 1.5;
+    vec3 swirl = vec3(noise(...), noise(...), noise(...));
+    pos += (swirl - 0.5) * chaosPower * aRandomOffset;
+} else if (uTransitionMode < 1.5) {
+    // SPIRAL VORTEX: rotate around center
+    float angle = p * 6.28 * 2.0;  // 2 full rotations
+    float radius = length(pos.xy);
+    float originalAngle = atan(pos.y, pos.x);
+    pos.x = radius * cos(originalAngle + angle);
+    pos.y = radius * sin(originalAngle + angle);
+    pos.z += sin(p * 3.14159) * 50.0 * aRandomOffset;
+} else if (uTransitionMode < 2.5) {
+    // EXPLOSION: burst outward
+    float power = sin(p * 3.14159) * 200.0 * aRandomOffset;
+    vec3 dir = normalize(pos + vec3(0.001));
+    pos += dir * power;
+} else {
+    // REVERSE GRAVITY: float upward
+    float peak = sin(p * 3.14159);
+    vec3 up = vec3(pos.x * 0.3, 100.0, pos.z * 0.3);
+    pos += up * peak * aRandomOffset;
+}
+```
+
+**Key Learnings:**
+- Use `if/else` with float comparisons for mode selection in GLSL
+- `sin(p * 3.14159)` creates a smooth 0→1→0 curve peaking at p=0.5
+- Polar coordinates (radius, angle) enable rotation effects
+- `normalize()` creates direction vectors for radial effects
+- `aRandomOffset` adds per-particle variation to effects
+
+---
+
+## Mouse Interaction
+
+### Screen to World Coordinates
+
+```javascript
+// Convert mouse position to 3D world coordinates
+const mouse = new THREE.Vector2();
+const mouseWorld = new THREE.Vector3();
+
+document.addEventListener("mousemove", (e) => {
+    // Normalize to -1 to 1 range
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    // Project to z-plane where particles live
+    const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+    vector.unproject(camera);
+    const dir = vector.sub(camera.position).normalize();
+    const distance = -camera.position.z / dir.z;
+    mouseWorld.copy(camera.position).add(dir.multiplyScalar(distance));
+});
+```
+
+**Key Learnings:**
+- `unproject()` converts screen coordinates to 3D ray
+- Divide by `dir.z` to find where ray intersects the particle plane
+- Mouse position updates are throttled for performance
+
+### Shader Mouse Effect
+
+```glsl
+uniform vec3 uMouse;
+uniform float uMouseMode;     // 0=off, 1=attract, 2=repel
+uniform float uMouseRadius;
+uniform float uMouseStrength;
+
+// In vertex shader
+if (uMouseMode > 0.5) {
+    vec3 toMouse = pos - uMouse;
+    float dist = length(toMouse);
+    if (dist < uMouseRadius && dist > 0.001) {
+        float strength = (1.0 - dist / uMouseRadius) * uMouseStrength;
+        vec3 direction = normalize(toMouse);
+        // Mode 1 = attract (toward), Mode 2 = repel (away)
+        pos += direction * strength * (uMouseMode > 1.5 ? 1.0 : -1.0);
+    }
+}
+```
+
+**Key Learnings:**
+- Distance falloff creates smooth interaction boundaries
+- `normalize()` ensures consistent strength regardless of distance
+- Mode selection uses same pattern as transition effects
 
 ---
 

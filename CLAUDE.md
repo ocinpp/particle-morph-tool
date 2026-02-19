@@ -25,12 +25,17 @@ particles-effects/
 **Particle System**
 - 100,000 particles via BufferGeometry
 - Attributes: position, aStartPosition, aEndPosition, aColorStart, aColorEnd, aRandomOffset
-- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale, uOpacity, uBrightness, uSaturation
+- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale, uTransitionMode, uOpacity, uBrightness, uSaturation, uMouse, uMouseMode, uMouseRadius, uMouseStrength
 
 **Vertex Shader**
 - Position interpolation with cubic easing
 - Per-particle delay via `aRandomOffset * MAX_DELAY`
-- Swirl/chaos noise during transition
+- Four transition effects controlled by `uTransitionMode`:
+  - Mode 0 (Default): Chaos/swirl noise during transition
+  - Mode 1 (Spiral Vortex): Rotating particles around center axis with Z-wave
+  - Mode 2 (Explosion): Radial burst outward then reform
+  - Mode 3 (Reverse Gravity): Upward float like fireworks
+- Mouse interaction (attract/repel)
 - Color blending based on progress
 
 **Fragment Shader**
@@ -56,6 +61,8 @@ particles-effects/
 | `PAUSE_DURATION` | 120 frames between morphs in loop mode |
 | `imageScale` | 0.9 - scale factor for particle images |
 | `autoMode` | false - auto-adjust settings based on background |
+| `transitionMode` | 0-3 - transition effect (default/spiral/explosion/gravity) |
+| `mouseMode` | 0-2 - mouse interaction (off/attract/repel) |
 
 ### Key Functions
 
@@ -82,8 +89,8 @@ particles-effects/
 
 ## Potential Enhancements
 
-- Add mouse interaction (particle attraction/repulsion)
 - Support for more than 2 images
 - Customizable particle count via UI
 - Export animation as video/GIF
 - Touch/mobile gesture support
+- Additional transition effects

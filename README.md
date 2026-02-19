@@ -6,10 +6,12 @@ A Three.js application that creates stunning particle morphing effects between t
 
 - **100,000 particles** animating smoothly between image shapes
 - **Custom GLSL shaders** with cubic easing and swirl effects
+- **4 transition effects**: Default Chaos, Spiral Vortex, Explosion, Reverse Gravity
 - **Staggered transitions** - particles move with randomized delays
 - **Color interpolation** - smooth or snap color transitions
 - **Grayscale mode** - toggle monochrome output
 - **Loop mode** - continuous A↔B morphing with pauses
+- **Mouse interaction** - attract or repel particles
 - **Collapsible UI** - hide controls for fullscreen viewing
 - **Auto BG mode** - automatically adjust settings based on background color
 - **Compact responsive UI** - fits on screen with scroll support
@@ -35,9 +37,19 @@ A Three.js application that creates stunning particle morphing effects between t
 |---------|-------------|
 | Loop Mode | Continuously morph between images |
 | Smooth Colors | Blend colors during transition |
+| Transition Effect | Choose morph animation style (see below) |
 | Grayscale | Convert output to monochrome |
 | Auto (for BG) | Auto-adjust settings based on background brightness |
 | Additive Blend | Glow effect (best for dark backgrounds) |
+
+### Transition Effects
+
+| Effect | Description |
+|--------|-------------|
+| Default Chaos | Swirling noise effect during transition |
+| Spiral Vortex | Particles spin around center axis with Z-wave |
+| Explosion | Particles burst outward then reform |
+| Reverse Gravity | Particles float upward like fireworks |
 
 ### Sliders
 
