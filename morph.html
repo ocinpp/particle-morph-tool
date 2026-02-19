@@ -611,6 +611,13 @@
       let objectUrlA = null;
       let objectUrlB = null;
 
+      // Reusable canvas for image processing
+      const processCanvas = document.createElement("canvas");
+      const processCtx = processCanvas.getContext("2d");
+
+      // Animation frame ID for cleanup
+      let animationFrameId = null;
+
       let pauseCounter = 0;
       const PAUSE_DURATION = 120;
 
@@ -731,7 +738,7 @@
         );
         camera.position.z = 500;
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
@@ -953,6 +960,12 @@
       }
 
       function cleanup() {
+        // Cancel animation loop
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+
         // Revoke object URLs
         if (objectUrlA) {
           URL.revokeObjectURL(objectUrlA);
@@ -962,6 +975,12 @@
           URL.revokeObjectURL(objectUrlB);
           objectUrlB = null;
         }
+
+        // Clear cached buffers
+        cachedPosA = null;
+        cachedColA = null;
+        cachedPosB = null;
+        cachedColB = null;
 
         // Dispose Three.js resources
         if (particles) {
@@ -1144,9 +1163,6 @@
 
         const img = new Image();
         img.onload = function () {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-
           let w = img.width;
           let h = img.height;
           const maxDim = 1000;
@@ -1156,10 +1172,11 @@
             h *= ratio;
           }
 
-          canvas.width = w;
-          canvas.height = h;
-          ctx.drawImage(img, 0, 0, w, h);
-          const data = ctx.getImageData(0, 0, w, h);
+          processCanvas.width = w;
+          processCanvas.height = h;
+          processCtx.clearRect(0, 0, w, h);
+          processCtx.drawImage(img, 0, 0, w, h);
+          const data = processCtx.getImageData(0, 0, w, h);
           const imgDataObj = { data: data.data, width: w, height: h };
 
           const buffers = getImageBuffers(imgDataObj);
@@ -1318,7 +1335,7 @@
       }
 
       function animate() {
-        requestAnimationFrame(animate);
+        animationFrameId = requestAnimationFrame(animate);
 
         particles.material.uniforms.uTime.value += 0.01;
 
@@ -1360,10 +1377,6 @@
         camera.updateProjectionMatrix();
         renderer.setSize(width, height);
       }
-
-      // Reusable canvas for image processing
-      const processCanvas = document.createElement("canvas");
-      const processCtx = processCanvas.getContext("2d");
 
       function reprocessImages() {
         function processImage(file, type) {
