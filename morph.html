@@ -475,6 +475,31 @@
           </div>
           <input type="range" id="saturationSlider" min="0" max="300" value="100" />
         </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Mouse Mode:</span>
+          <select id="mouseModeSelect" style="background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 3px 6px; font-size: 11px;">
+            <option value="0">Off</option>
+            <option value="1">Attract</option>
+            <option value="2">Repel</option>
+          </select>
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Mouse Radius:</span>
+            <span class="slider-value" id="mouseRadiusValue">100</span>
+          </div>
+          <input type="range" id="mouseRadiusSlider" min="20" max="300" value="100" />
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-header">
+            <span class="slider-label">Mouse Strength:</span>
+            <span class="slider-value" id="mouseStrengthValue">30</span>
+          </div>
+          <input type="range" id="mouseStrengthSlider" min="5" max="100" value="30" />
+        </div>
       </div>
 
       <button id="morphBtn" class="action-btn start-state">Start Loop</button>
@@ -528,6 +553,11 @@
       const MORPH_SPEED = 0.012;
       const MAX_DELAY = 0.3;
 
+      // Mouse interaction
+      const mouse = new THREE.Vector2();
+      const mouseWorld = new THREE.Vector3();
+      let mouseMode = 0; // 0=off, 1=attract, 2=repel
+
       const vertexShader = `
             attribute vec3 aStartPosition;
             attribute vec3 aEndPosition;
@@ -539,6 +569,10 @@
             uniform float uTime;
             uniform float uSmoothColors;
             uniform float uGrayscale;
+            uniform vec3 uMouse;
+            uniform float uMouseMode;
+            uniform float uMouseRadius;
+            uniform float uMouseStrength;
 
             varying vec3 vColor;
 
@@ -562,6 +596,18 @@
                     noise(vec3(pos.xz * 5.0, uTime))
                 );
                 pos += (swirl - 0.5) * chaosPower * aRandomOffset;
+
+                // Mouse interaction
+                if (uMouseMode > 0.5) {
+                    vec3 toMouse = pos - uMouse;
+                    float dist = length(toMouse);
+                    if (dist < uMouseRadius && dist > 0.001) {
+                        float strength = (1.0 - dist / uMouseRadius) * uMouseStrength;
+                        vec3 direction = normalize(toMouse);
+                        // Mode 1 = attract (toward mouse), Mode 2 = repel (away from mouse)
+                        pos += direction * strength * (uMouseMode > 1.5 ? 1.0 : -1.0);
+                    }
+                }
 
                 vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
                 gl_Position = projectionMatrix * mvPosition;
@@ -778,6 +824,56 @@
             }
           });
 
+        // Mouse Mode Select
+        document
+          .getElementById("mouseModeSelect")
+          .addEventListener("change", (e) => {
+            mouseMode = parseInt(e.target.value);
+            if (particles) {
+              particles.material.uniforms.uMouseMode.value = mouseMode;
+            }
+          });
+
+        // Mouse Radius Slider
+        document
+          .getElementById("mouseRadiusSlider")
+          .addEventListener("input", (e) => {
+            const radius = parseFloat(e.target.value);
+            document.getElementById("mouseRadiusValue").textContent = radius;
+            if (particles) {
+              particles.material.uniforms.uMouseRadius.value = radius;
+            }
+          });
+
+        // Mouse Strength Slider
+        document
+          .getElementById("mouseStrengthSlider")
+          .addEventListener("input", (e) => {
+            const strength = parseFloat(e.target.value);
+            document.getElementById("mouseStrengthValue").textContent = strength;
+            if (particles) {
+              particles.material.uniforms.uMouseStrength.value = strength;
+            }
+          });
+
+        // Mouse move handler
+        document.addEventListener("mousemove", (e) => {
+          const rect = renderer.domElement.getBoundingClientRect();
+          mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+          // Project to z-plane where particles live
+          const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+          vector.unproject(camera);
+          const dir = vector.sub(camera.position).normalize();
+          const distance = -camera.position.z / dir.z;
+          mouseWorld.copy(camera.position).add(dir.multiplyScalar(distance));
+
+          if (particles) {
+            particles.material.uniforms.uMouse.value.copy(mouseWorld);
+          }
+        });
+
         // Cleanup on page unload
         window.addEventListener("beforeunload", cleanup);
 
@@ -859,6 +955,10 @@
             uOpacity: { value: 1.0 },
             uBrightness: { value: 1.0 },
             uSaturation: { value: 1.0 },
+            uMouse: { value: new THREE.Vector3() },
+            uMouseMode: { value: 0.0 },
+            uMouseRadius: { value: 100.0 },
+            uMouseStrength: { value: 30.0 },
           },
           transparent: true,
           depthWrite: false,
