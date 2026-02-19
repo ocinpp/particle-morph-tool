@@ -629,6 +629,16 @@
       const mouseWorld = new THREE.Vector3();
       let mouseMode = 0; // 0=off, 1=attract, 2=repel
 
+      // Performance optimization: tab visibility
+      let isTabVisible = true;
+
+      // Performance optimization: mouse throttling
+      let lastMouseUpdate = 0;
+      const MOUSE_THROTTLE = 33; // ~30fps
+
+      // Performance optimization: conditional rendering
+      let needsRender = true;
+
       const vertexShader = `
             attribute vec3 aStartPosition;
             attribute vec3 aEndPosition;
@@ -935,8 +945,12 @@
             }
           });
 
-        // Mouse move handler
+        // Mouse move handler (throttled for performance)
         document.addEventListener("mousemove", (e) => {
+          const now = performance.now();
+          if (now - lastMouseUpdate < MOUSE_THROTTLE) return;
+          lastMouseUpdate = now;
+
           const rect = renderer.domElement.getBoundingClientRect();
           mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
           mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -950,7 +964,13 @@
 
           if (particles) {
             particles.material.uniforms.uMouse.value.copy(mouseWorld);
+            needsRender = true;
           }
+        });
+
+        // Tab visibility handler for performance
+        document.addEventListener("visibilitychange", () => {
+          isTabVisible = !document.hidden;
         });
 
         // Cleanup on page unload
@@ -1337,7 +1357,14 @@
       function animate() {
         animationFrameId = requestAnimationFrame(animate);
 
-        particles.material.uniforms.uTime.value += 0.01;
+        // Skip rendering when tab is hidden
+        if (!isTabVisible) return;
+
+        // Only update time if playing or mouse interaction is active
+        if (isPlaying || mouseMode !== 0) {
+          particles.material.uniforms.uTime.value += 0.01;
+          needsRender = true;
+        }
 
         if (isPlaying) {
           if (progress < 1.0 + MAX_DELAY) {
@@ -1360,9 +1387,14 @@
             }
           }
           particles.material.uniforms.uProgress.value = progress;
+          needsRender = true;
         }
 
-        renderer.render(scene, camera);
+        // Only render if something changed
+        if (needsRender) {
+          renderer.render(scene, camera);
+          needsRender = false;
+        }
       }
 
       function updateCanvasSize() {
