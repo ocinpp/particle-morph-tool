@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Particle Morph - UI Controls</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #111;
+        color: white;
+        font-family: sans-serif;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      /* RESTORE BUTTON (Visible when panel is hidden) */
+      #restoreBtn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #0af;
+        border: 1px solid #0af;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 18px;
+        z-index: 5;
+        display: none; /* Hidden by default */
+        transition: all 0.3s;
+      }
+      #restoreBtn:hover {
+        background: #0af;
+        color: #000;
+      }
+
+      #ui {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 320px;
+        z-index: 10;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        transition:
+          transform 0.3s ease,
+          opacity 0.3s ease;
+      }
+
+      /* Class to hide the UI */
+      #ui.hidden {
+        transform: translateX(-110%);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* HEADER FLEX CONTAINER */
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #0af;
+        text-align: left;
+      }
+
+      /* COLLAPSE BUTTON */
+      .collapse-btn {
+        background: transparent;
+        border: 1px solid #444;
+        color: #888;
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 18px;
+        padding: 0;
+        transition: all 0.2s;
+      }
+      .collapse-btn:hover {
+        border-color: #0af;
+        color: #0af;
+      }
+
+      .input-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        margin-bottom: 5px;
+        color: #aaa;
+      }
+
+      input[type="file"] {
+        font-size: 12px;
+        color: white;
+        background: #222;
+        padding: 5px;
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #444;
+      }
+
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        background: #222;
+        padding: 8px 10px;
+        border-radius: 6px;
+      }
+
+      .toggle-label {
+        font-size: 13px;
+        font-weight: bold;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 26px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #555;
+        transition: 0.4s;
+        border-radius: 26px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: #0af;
+      }
+      input:checked + .slider:before {
+        transform: translateX(24px);
+      }
+
+      button.action-btn {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        margin-top: 10px;
+      }
+
+      button.start-state {
+        background: linear-gradient(45deg, #007aff, #00c7ff);
+        color: white;
+      }
+
+      button.stop-state {
+        background: #ff3b30;
+        color: white;
+        box-shadow: 0 0 15px #ff3b30;
+      }
+
+      #status-container {
+        margin-top: 15px;
+        background: #000;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        text-align: center;
+      }
+
+      #status-text {
+        font-size: 18px;
+        font-weight: bold;
+        color: #0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- BUTTON TO RESTORE UI -->
+    <button id="restoreBtn" title="Show Controls">+</button>
+
+    <div id="ui">
+      <!-- HEADER WITH COLLAPSE BUTTON -->
+      <div class="header-container">
+        <h2>Particle Morph Tool</h2>
+        <button class="collapse-btn" id="collapseBtn" title="Hide Controls">
+          −
+        </button>
+      </div>
+
+      <div class="input-group">
+        <label>Image A (Start Shape)</label>
+        <input type="file" id="imgA" accept="image/*" />
+      </div>
+
+      <div class="input-group">
+        <label>Image B (Target Shape)</label>
+        <input type="file" id="imgB" accept="image/*" />
+      </div>
+
+      <!-- OPTIONS GROUP -->
+      <div style="margin-bottom: 10px">
+        <div class="toggle-container">
+          <span class="toggle-label">Loop Mode:</span>
+          <label class="switch">
+            <input type="checkbox" id="loopToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Smooth Colors:</span>
+          <label class="switch">
+            <input type="checkbox" id="colorToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Grayscale:</span>
+          <label class="switch">
+            <input type="checkbox" id="grayToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <button id="morphBtn" class="action-btn start-state">Start Loop</button>
+
+      <div id="status-container">
+        <div id="status-text">Waiting for images...</div>
+      </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import * as THREE from "three";
+
+      const PARTICLE_COUNT = 100000;
+
+      let scene, camera, renderer, particles;
+
+      let cachedPosA = null;
+      let cachedColA = null;
+      let cachedPosB = null;
+      let cachedColB = null;
+
+      let isPlaying = false;
+      let loopMode = true;
+      let smoothColors = true;
+      let useGrayscale = false;
+      let progress = 0;
+      let currentTarget = "B";
+
+      let pauseCounter = 0;
+      const PAUSE_DURATION = 120;
+
+      const MORPH_SPEED = 0.012;
+      const MAX_DELAY = 0.3;
+
+      const vertexShader = `
+            attribute vec3 aStartPosition;
+            attribute vec3 aEndPosition;
+            attribute vec3 aColorStart;
+            attribute vec3 aColorEnd;
+            attribute float aRandomOffset;
+
+            uniform float uProgress;
+            uniform float uTime;
+            uniform float uSmoothColors;
+            uniform float uGrayscale;
+
+            varying vec3 vColor;
+
+            float noise(vec3 p) {
+                return fract(sin(dot(p, vec3(12.9898, 78.233, 45.543))) * 43758.5453);
+            }
+
+            void main() {
+                float delay = aRandomOffset * ${MAX_DELAY.toFixed(2)};
+                float p_raw = uProgress - delay;
+                float p = clamp(p_raw, 0.0, 1.0);
+
+                p = p < 0.5 ? 4.0 * p * p * p : 1.0 - pow(-2.0 * p + 2.0, 3.0) / 2.0;
+
+                vec3 pos = mix(aStartPosition, aEndPosition, p);
+
+                float chaosPower = sin(p * 3.14159) * 1.5;
+                vec3 swirl = vec3(
+                    noise(vec3(pos.xy * 5.0, uTime)),
+                    noise(vec3(pos.yz * 5.0, uTime)),
+                    noise(vec3(pos.xz * 5.0, uTime))
+                );
+                pos += (swirl - 0.5) * chaosPower * aRandomOffset;
+
+                vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
+
+                gl_PointSize = 3.0 * (300.0 / -mvPosition.z);
+
+                if (uSmoothColors > 0.5) {
+                    vColor = mix(aColorStart, aColorEnd, p);
+                } else {
+                    if (p < 0.5) {
+                        vColor = aColorStart;
+                    } else {
+                        vColor = aColorEnd;
+                    }
+                }
+
+                if (uGrayscale > 0.5) {
+                    float gray = dot(vColor, vec3(0.299, 0.587, 0.114));
+                    vColor = vec3(gray);
+                }
+            }
+        `;
+
+      const fragmentShader = `
+            varying vec3 vColor;
+
+            void main() {
+                float dist = length(gl_PointCoord - vec2(0.5));
+                if (dist > 0.5) discard;
+                float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
+                gl_FragColor = vec4(vColor, alpha);
+            }
+        `;
+
+      function init() {
+        const container = document.getElementById("canvas-container");
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111111);
+
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          2000,
+        );
+        camera.position.z = 500;
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        createParticleSystem();
+
+        window.addEventListener("resize", onWindowResize);
+
+        // Image Inputs
+        document
+          .getElementById("imgA")
+          .addEventListener("change", (e) => handleImageUpload(e, "A"));
+        document
+          .getElementById("imgB")
+          .addEventListener("change", (e) => handleImageUpload(e, "B"));
+
+        // Main Button
+        document
+          .getElementById("morphBtn")
+          .addEventListener("click", handleButtonClick);
+
+        // Toggles
+        document
+          .getElementById("loopToggle")
+          .addEventListener("change", (e) => {
+            loopMode = e.target.checked;
+            updateUI();
+          });
+
+        document
+          .getElementById("colorToggle")
+          .addEventListener("change", (e) => {
+            smoothColors = e.target.checked;
+            if (particles)
+              particles.material.uniforms.uSmoothColors.value = smoothColors
+                ? 1.0
+                : 0.0;
+          });
+
+        document
+          .getElementById("grayToggle")
+          .addEventListener("change", (e) => {
+            useGrayscale = e.target.checked;
+            if (particles)
+              particles.material.uniforms.uGrayscale.value = useGrayscale
+                ? 1.0
+                : 0.0;
+          });
+
+        // UI Collapse Logic
+        const uiPanel = document.getElementById("ui");
+        const restoreBtn = document.getElementById("restoreBtn");
+        const collapseBtn = document.getElementById("collapseBtn");
+
+        collapseBtn.addEventListener("click", () => {
+          uiPanel.classList.add("hidden");
+          restoreBtn.style.display = "block";
+        });
+
+        restoreBtn.addEventListener("click", () => {
+          uiPanel.classList.remove("hidden");
+          restoreBtn.style.display = "none";
+        });
+
+        animate();
+      }
+
+      function createParticleSystem() {
+        const geometry = new THREE.BufferGeometry();
+
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        const startPositions = new Float32Array(PARTICLE_COUNT * 3);
+        const endPositions = new Float32Array(PARTICLE_COUNT * 3);
+        const startColors = new Float32Array(PARTICLE_COUNT * 3);
+        const endColors = new Float32Array(PARTICLE_COUNT * 3);
+        const randomOffsets = new Float32Array(PARTICLE_COUNT);
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          const i3 = i * 3;
+          positions[i3] = (Math.random() - 0.5) * 1000;
+          positions[i3 + 1] = (Math.random() - 0.5) * 1000;
+          positions[i3 + 2] = (Math.random() - 0.5) * 1000;
+          randomOffsets[i] = Math.random();
+        }
+
+        geometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(positions, 3),
+        );
+        geometry.setAttribute(
+          "aStartPosition",
+          new THREE.BufferAttribute(startPositions, 3),
+        );
+        geometry.setAttribute(
+          "aEndPosition",
+          new THREE.BufferAttribute(endPositions, 3),
+        );
+        geometry.setAttribute(
+          "aColorStart",
+          new THREE.BufferAttribute(startColors, 3),
+        );
+        geometry.setAttribute(
+          "aColorEnd",
+          new THREE.BufferAttribute(endColors, 3),
+        );
+        geometry.setAttribute(
+          "aRandomOffset",
+          new THREE.BufferAttribute(randomOffsets, 1),
+        );
+
+        const material = new THREE.ShaderMaterial({
+          vertexShader,
+          fragmentShader,
+          uniforms: {
+            uProgress: { value: 0.0 },
+            uTime: { value: 0.0 },
+            uSmoothColors: { value: 1.0 },
+            uGrayscale: { value: 0.0 },
+          },
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+
+        particles = new THREE.Points(geometry, material);
+        scene.add(particles);
+      }
+
+      function getImageBuffers(imgData) {
+        const pos = new Float32Array(PARTICLE_COUNT * 3);
+        const col = new Float32Array(PARTICLE_COUNT * 3);
+
+        const width = imgData.width;
+        const height = imgData.height;
+        const pixels = imgData.data;
+
+        let minX = width,
+          maxX = 0,
+          minY = height,
+          maxY = 0;
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            if (pixels[i + 3] > 128) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        const contentWidth = maxX - minX;
+        const contentHeight = maxY - minY;
+
+        const vFov = THREE.MathUtils.degToRad(camera.fov);
+        const vHeight = 2 * Math.tan(vFov / 2) * camera.position.z;
+        const vWidth = vHeight * camera.aspect;
+
+        const scaleX = vWidth / contentWidth;
+        const scaleY = vHeight / contentHeight;
+        const scale = Math.min(scaleX, scaleY) * 0.9;
+
+        const centerX = minX + contentWidth / 2;
+        const centerY = minY + contentHeight / 2;
+
+        let particleIndex = 0;
+
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+
+            if (pixels[i + 3] < 128) continue;
+
+            if (particleIndex < PARTICLE_COUNT) {
+              const i3 = particleIndex * 3;
+
+              pos[i3] = (x - centerX) * scale;
+              pos[i3 + 1] = -(y - centerY) * scale;
+              pos[i3 + 2] = (Math.random() - 0.5) * 2.0;
+
+              col[i3] = pixels[i] / 255;
+              col[i3 + 1] = pixels[i + 1] / 255;
+              col[i3 + 2] = pixels[i + 2] / 255;
+
+              particleIndex++;
+            }
+          }
+        }
+
+        while (particleIndex < PARTICLE_COUNT) {
+          const i3 = particleIndex * 3;
+          pos[i3] = 0;
+          pos[i3 + 1] = 0;
+          pos[i3 + 2] = -10000;
+          col[i3] = 0;
+          col[i3 + 1] = 0;
+          col[i3 + 2] = 0;
+          particleIndex++;
+        }
+
+        return { positions: pos, colors: col };
+      }
+
+      function handleImageUpload(event, type) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        isPlaying = false;
+        pauseCounter = 0;
+        updateUI();
+
+        updateStatus("Processing...");
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            let w = img.width;
+            let h = img.height;
+            const maxDim = 1000;
+            if (w > maxDim || h > maxDim) {
+              const ratio = Math.min(maxDim / w, maxDim / h);
+              w *= ratio;
+              h *= ratio;
+            }
+
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(img, 0, 0, w, h);
+            const data = ctx.getImageData(0, 0, w, h);
+            const imgDataObj = { data: data.data, width: w, height: h };
+
+            const buffers = getImageBuffers(imgDataObj);
+
+            if (type === "A") {
+              cachedPosA = buffers.positions;
+              cachedColA = buffers.colors;
+
+              particles.geometry.attributes.aStartPosition.array.set(
+                cachedPosA,
+              );
+              particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
+              particles.geometry.attributes.aColorStart.array.set(cachedColA);
+              particles.geometry.attributes.aColorEnd.array.set(cachedColA);
+
+              particles.geometry.attributes.aStartPosition.needsUpdate = true;
+              particles.geometry.attributes.aEndPosition.needsUpdate = true;
+              particles.geometry.attributes.aColorStart.needsUpdate = true;
+              particles.geometry.attributes.aColorEnd.needsUpdate = true;
+
+              particles.material.uniforms.uProgress.value = 1.0;
+
+              currentTarget = "B";
+              progress = 1.0;
+
+              updateStatus("Ready at Image A");
+            } else {
+              cachedPosB = buffers.positions;
+              cachedColB = buffers.colors;
+              updateStatus("Ready at Image A");
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function handleButtonClick() {
+        if (!cachedPosA || !cachedPosB) {
+          updateStatus("Error: Upload Both!");
+          return;
+        }
+
+        if (isPlaying) {
+          isPlaying = false;
+          pauseCounter = 0;
+          updateStatus("Stopped");
+        } else {
+          isPlaying = true;
+          pauseCounter = 0;
+
+          if (progress >= 1.0) {
+            swapBuffers();
+            particles.material.uniforms.uProgress.value = progress;
+          }
+          updateStatus("Playing...");
+        }
+        updateUI();
+      }
+
+      function updateUI() {
+        const btn = document.getElementById("morphBtn");
+
+        if (isPlaying) {
+          btn.innerText = "STOP";
+          btn.className = "action-btn stop-state";
+        } else {
+          if (loopMode) {
+            btn.innerText = "START LOOP";
+          } else {
+            btn.innerText = "MORPH ONCE";
+          }
+          btn.className = "action-btn start-state";
+        }
+      }
+
+      function updateStatus(msg) {
+        document.getElementById("status-text").innerText = msg;
+      }
+
+      function swapBuffers() {
+        if (currentTarget === "B") {
+          particles.geometry.attributes.aStartPosition.array.set(cachedPosA);
+          particles.geometry.attributes.aColorStart.array.set(cachedColA);
+          particles.geometry.attributes.aEndPosition.array.set(cachedPosB);
+          particles.geometry.attributes.aColorEnd.array.set(cachedColB);
+          currentTarget = "A";
+          updateStatus("Morphing A -> B");
+        } else {
+          particles.geometry.attributes.aStartPosition.array.set(cachedPosB);
+          particles.geometry.attributes.aColorStart.array.set(cachedColB);
+          particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
+          particles.geometry.attributes.aColorEnd.array.set(cachedColA);
+          currentTarget = "B";
+          updateStatus("Morphing B -> A");
+        }
+
+        particles.geometry.attributes.aStartPosition.needsUpdate = true;
+        particles.geometry.attributes.aEndPosition.needsUpdate = true;
+        particles.geometry.attributes.aColorStart.needsUpdate = true;
+        particles.geometry.attributes.aColorEnd.needsUpdate = true;
+
+        progress = 0;
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        particles.material.uniforms.uTime.value += 0.01;
+
+        if (isPlaying) {
+          if (progress < 1.0 + MAX_DELAY) {
+            progress += MORPH_SPEED;
+          } else {
+            if (loopMode) {
+              pauseCounter++;
+              if (pauseCounter % 30 === 0 && pauseCounter <= PAUSE_DURATION) {
+                updateStatus("Pausing...");
+              }
+
+              if (pauseCounter >= PAUSE_DURATION) {
+                pauseCounter = 0;
+                swapBuffers();
+              }
+            } else {
+              isPlaying = false;
+              updateUI();
+              updateStatus("Finished");
+            }
+          }
+          particles.material.uniforms.uProgress.value = progress;
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      init();
+    </script>
+  </body>
+</html>
