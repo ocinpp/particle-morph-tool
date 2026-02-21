@@ -1910,9 +1910,14 @@
         renderer.render(scene, camera);
 
         const link = document.createElement("a");
+        const dataUrl = renderer.domElement.toDataURL("image/png");
         link.download = "particle-morph-" + Date.now() + ".png";
-        link.href = renderer.domElement.toDataURL("image/png");
+        link.href = dataUrl;
         link.click();
+
+        // Clean up to release memory
+        link.href = "";
+        link = null;
 
         updateStatus("Screenshot saved!");
         setTimeout(() => updateStatus(isPlaying ? "Playing..." : "Ready"), 2000);
@@ -2033,6 +2038,7 @@
       function setupTouchSupport() {
         let touchStartTime = 0;
         let touchTimeout = null;
+        let attractTimeout = null;  // Track attract mode timeout
         const LONG_PRESS_DURATION = 500;
 
         renderer.domElement.addEventListener("touchstart", (e) => {
@@ -2052,9 +2058,12 @@
             // Short tap = attract mode briefly
             mouseMode = 1;
             if (particles) particles.material.uniforms.uMouseMode.value = 1;
-            setTimeout(() => {
+            // Clear any existing attract timeout before creating new one
+            clearTimeout(attractTimeout);
+            attractTimeout = setTimeout(() => {
               mouseMode = 0;
               if (particles) particles.material.uniforms.uMouseMode.value = 0;
+              attractTimeout = null;
             }, 1000);
           } else {
             // Reset after long press
