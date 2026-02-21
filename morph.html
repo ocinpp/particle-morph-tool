@@ -1759,12 +1759,11 @@
         if (images.length > 0) {
           displayImage(currentIndex);
         } else {
-          // Clear particle positions
-          const empty = new Float32Array(PARTICLE_COUNT * 3);
-          particles.geometry.attributes.aStartPosition.array.set(empty);
-          particles.geometry.attributes.aEndPosition.array.set(empty);
-          particles.geometry.attributes.aColorStart.array.set(empty);
-          particles.geometry.attributes.aColorEnd.array.set(empty);
+          // Clear particle positions using reusable buffer
+          particles.geometry.attributes.aStartPosition.array.set(emptyBuffer);
+          particles.geometry.attributes.aEndPosition.array.set(emptyBuffer);
+          particles.geometry.attributes.aColorStart.array.set(emptyBuffer);
+          particles.geometry.attributes.aColorEnd.array.set(emptyBuffer);
           particles.geometry.attributes.aStartPosition.needsUpdate = true;
           particles.geometry.attributes.aEndPosition.needsUpdate = true;
           particles.geometry.attributes.aColorStart.needsUpdate = true;
@@ -2018,12 +2017,22 @@
         renderer.setSize(width, height);
       }
 
+      // Reusable empty buffer for clearing
+      const emptyBuffer = new Float32Array(PARTICLE_COUNT * 3);
+
       function reprocessImages() {
         if (images.length === 0) return;
 
         images.forEach((imgData, index) => {
           const img = new Image();
           img.onload = function() {
+            // Check if image still exists (could have been removed during load)
+            if (!images[index]) {
+              img.onload = null;
+              img.onerror = null;
+              return;
+            }
+
             let w = img.width;
             let h = img.height;
             const maxDim = 1000;
@@ -2048,7 +2057,15 @@
             }
 
             img.onload = null;
+            img.onerror = null;
           };
+
+          img.onerror = function() {
+            console.warn("Failed to reprocess image:", imgData.name);
+            img.onload = null;
+            img.onerror = null;
+          };
+
           img.src = imgData.url;
         });
       }
