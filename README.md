@@ -65,7 +65,7 @@ The counter shows current position (e.g., "2 of 5").
 | Grayscale | Convert output to monochrome |
 | Invert Colors | Invert all colors (negative effect) |
 | Auto Rotate | Continuously rotate particles around Y-axis |
-| Show FPS | Display frame rate counter in top right |
+| Show FPS | Display frame rate counter in bottom right |
 | Auto (for BG) | Auto-adjust settings based on background brightness |
 | Additive Blend | Glow effect (best for dark backgrounds) |
 
@@ -94,6 +94,8 @@ The counter shows current position (e.g., "2 of 5").
 | Hue Shift | 0-360° | Rotate all colors around color wheel |
 | Point Size | 1.0-10.0 | Size of individual particles |
 | Z-Depth | 0-50 | Particle spread on Z-axis (3D depth) |
+| Mouse Radius | 20-300 | Radius of mouse interaction effect |
+| Mouse Strength | 10-500% | Strength of mouse attraction/repulsion |
 
 ### Presets
 
@@ -124,6 +126,7 @@ On touch devices:
 
 - **FPS Counter** - Toggle in Animation section to show frame rate
 - **Settings Persistence** - All settings and images auto-save and restore on next visit
+- **Reset Button** - Click ↺ in header to reset all settings to defaults (with confirmation)
 
 ### Auto BG Mode
 

@@ -74,7 +74,9 @@ particles-effects/
 | `autoMode` | false - auto-adjust settings based on background |
 | `transitionMode` | 0-3 - transition effect (default/spiral/explosion/gravity) |
 | `mouseMode` | 0-2 - mouse interaction (off/attract/repel) |
-| `showFPS` | false - show FPS counter in corner |
+| `mouseRadius` | 150 (default) - radius of mouse interaction effect |
+| `mouseStrength` | 3.0 (default) - strength of mouse interaction |
+| `showFPS` | false - show FPS counter in bottom right corner |
 | `additiveBlend` | true - use additive blending for glow effect |
 | `opacity` | 100 (default) - particle opacity percentage |
 | `brightness` | 100 (default) - particle brightness percentage |
@@ -98,7 +100,14 @@ particles-effects/
 | `setupTouchSupport()` | Initialize touch event handlers |
 | `reprocessImages()` | Re-scale all images when scale slider changes |
 | `updateCanvasSize()` | Resize canvas when width/height sliders change |
-| `cleanup()` | Cancel animation, revoke all URLs, dispose Three.js resources |
+| `cleanup()` | Cancel animation, revoke all URLs, dispose Three.js resources, close IndexedDB |
+| `saveSettings()` | Save all settings to localStorage |
+| `loadSettings()` | Load settings from localStorage and apply to UI |
+| `resetSettings()` | Reset all settings to default values |
+| `openImageDB()` | Open/create IndexedDB for image persistence |
+| `saveImageToDB(blob, id)` | Save image blob to IndexedDB |
+| `deleteImageFromDB(id)` | Delete image from IndexedDB |
+| `loadImagesFromDB()` | Load all saved images from IndexedDB |
 
 ## Dependencies
 
@@ -115,7 +124,8 @@ particles-effects/
 - Keyboard shortcuts: Space (play/pause), Escape (toggle UI), F (fullscreen)
 - Settings persistence via localStorage (auto-save on page unload)
 - Image persistence via IndexedDB (images restored on reload)
-- FPS counter toggle for performance monitoring
+- FPS counter toggle for performance monitoring (bottom right)
+- Reset settings button with confirmation dialog
 - Loading spinner shown during image processing
 - WebGL context loss/recovery handled gracefully
 - Multi-image support with dynamic list UI
@@ -126,6 +136,7 @@ particles-effects/
 - Adjustable pause duration between morphs
 - Color inversion toggle
 - Auto-rotate mode with adjustable speed
+- Mouse interaction with configurable radius and strength
 
 ## Potential Enhancements
 
