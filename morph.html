@@ -1656,6 +1656,13 @@
 
         renderer.domElement.addEventListener("webglcontextrestored", () => {
           updateStatus("WebGL restored - reload images");
+          // Dispose old particle system before creating new one
+          if (particles) {
+            scene.remove(particles);
+            particles.geometry.dispose();
+            particles.material.dispose();
+            particles = null;
+          }
           // Reinitialize the particle system
           createParticleSystem();
         });
@@ -1703,6 +1710,12 @@
         if (renderer) {
           renderer.dispose();
           renderer.forceContextLoss(); // Force WebGL context release
+        }
+
+        // Close IndexedDB connection
+        if (imageDB) {
+          imageDB.close();
+          imageDB = null;
         }
       }
 
@@ -1909,14 +1922,12 @@
 
               const buffers = getImageBuffers(imgDataObj);
 
-              // Store the original file for potential DB operations
               const imageData = {
                 pos: buffers.positions,
                 col: buffers.colors,
                 url: objectUrl,
                 name: file.name,
-                id: imageId,
-                file: saveToDB ? file : null
+                id: imageId
               };
 
               // Add to images array
