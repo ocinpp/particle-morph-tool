@@ -578,6 +578,55 @@ renderer.domElement.addEventListener("webglcontextrestored", () => {
 - Must re-create all GPU resources (geometries, textures, materials) after restore
 - Always inform users when context is lost/restored
 
+### Tracking setTimeout for Cleanup
+
+```javascript
+// BAD: Untracked setTimeout can accumulate
+setTimeout(() => {
+    mouseMode = 0;
+}, 1000);
+
+// GOOD: Track and clear before creating new timer
+let attractTimeout = null;
+
+function handleTap() {
+    // Clear any existing timeout before creating new one
+    clearTimeout(attractTimeout);
+    attractTimeout = setTimeout(() => {
+        mouseMode = 0;
+        attractTimeout = null;
+    }, 1000);
+}
+```
+
+**Key Learnings:**
+- Rapid user interactions can create multiple timers
+- Always track timeout IDs for cleanup
+- `clearTimeout()` before creating new timer prevents accumulation
+- Set variable to `null` after timer fires for explicit cleanup
+
+### Data URL Cleanup
+
+```javascript
+function takeScreenshot() {
+    const link = document.createElement("a");
+    const dataUrl = renderer.domElement.toDataURL("image/png");
+
+    link.download = "screenshot.png";
+    link.href = dataUrl;
+    link.click();
+
+    // Clean up to release memory (data URLs can be large)
+    link.href = "";
+    link = null;
+}
+```
+
+**Key Learnings:**
+- `toDataURL()` creates a base64 string that can be several MB
+- Clear `href` and nullify link after download to help GC
+- For frequent screenshots, consider using `canvas.toBlob()` instead
+
 ### Image Loading Error Handling
 
 ```javascript
