@@ -114,6 +114,7 @@ particles-effects/
 - Compact UI with max-height and overflow scroll for smaller screens
 - Keyboard shortcuts: Space (play/pause), Escape (toggle UI), F (fullscreen)
 - Settings persistence via localStorage (auto-save on page unload)
+- Image persistence via IndexedDB (images restored on reload)
 - FPS counter toggle for performance monitoring
 - Loading spinner shown during image processing
 - WebGL context loss/recovery handled gracefully

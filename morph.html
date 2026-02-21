@@ -1641,6 +1641,16 @@
           cleanup();
         });
 
+        // Initialize IndexedDB and load saved images
+        (async () => {
+          try {
+            await openImageDB();
+            await loadImagesFromDB();
+          } catch (err) {
+            console.warn("Failed to initialize image DB:", err);
+          }
+        })();
+
         animate();
       }
 
@@ -1834,6 +1844,10 @@
       }
 
       function addImage(file) {
+        return addImageFromFile(file, true, null);
+      }
+
+      async function addImageFromFile(file, saveToDB = true, existingId = null) {
         if (!file || !file.type.startsWith("image/")) return;
 
         isPlaying = false;
@@ -1846,70 +1860,92 @@
         statusText.className = "status-loading";
 
         const objectUrl = URL.createObjectURL(file);
+        const imageId = existingId !== null ? existingId : imageIdCounter++;
 
-        const img = new Image();
-        img.onload = function () {
-          try {
-            let w = img.width;
-            let h = img.height;
-            const maxDim = 1000;
-            if (w > maxDim || h > maxDim) {
-              const ratio = Math.min(maxDim / w, maxDim / h);
-              w *= ratio;
-              h *= ratio;
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = async function () {
+            try {
+              let w = img.width;
+              let h = img.height;
+              const maxDim = 1000;
+              if (w > maxDim || h > maxDim) {
+                const ratio = Math.min(maxDim / w, maxDim / h);
+                w *= ratio;
+                h *= ratio;
+              }
+
+              processCanvas.width = w;
+              processCanvas.height = h;
+              processCtx.clearRect(0, 0, w, h);
+              processCtx.drawImage(img, 0, 0, w, h);
+              const data = processCtx.getImageData(0, 0, w, h);
+              const imgDataObj = { data: data.data, width: w, height: h };
+
+              const buffers = getImageBuffers(imgDataObj);
+
+              // Store the original file for potential DB operations
+              const imageData = {
+                pos: buffers.positions,
+                col: buffers.colors,
+                url: objectUrl,
+                name: file.name,
+                id: imageId,
+                file: saveToDB ? file : null
+              };
+
+              // Add to images array
+              images.push(imageData);
+
+              // Save to IndexedDB if requested
+              if (saveToDB && imageDB) {
+                try {
+                  await saveImageToDB(file, imageId);
+                } catch (err) {
+                  console.warn("Failed to save image to DB:", err);
+                }
+              }
+
+              // Update UI
+              updateImageList();
+
+              // If first image, display it
+              if (images.length === 1) {
+                displayImage(0);
+              }
+
+              updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
+              statusText.className = "";
+              resolve();
+            } catch (err) {
+              console.error("Image processing error:", err);
+              updateStatus("Error: " + err.message);
+              statusText.className = "status-error";
+              URL.revokeObjectURL(objectUrl);
+              resolve();
             }
 
-            processCanvas.width = w;
-            processCanvas.height = h;
-            processCtx.clearRect(0, 0, w, h);
-            processCtx.drawImage(img, 0, 0, w, h);
-            const data = processCtx.getImageData(0, 0, w, h);
-            const imgDataObj = { data: data.data, width: w, height: h };
+            img.onload = null;
+            img.onerror = null;
+          };
 
-            const buffers = getImageBuffers(imgDataObj);
-
-            // Add to images array
-            images.push({
-              pos: buffers.positions,
-              col: buffers.colors,
-              url: objectUrl,
-              name: file.name
-            });
-
-            // Update UI
-            updateImageList();
-
-            // If first image, display it
-            if (images.length === 1) {
-              displayImage(0);
-            }
-
-            updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
-            statusText.className = "";
-          } catch (err) {
-            console.error("Image processing error:", err);
-            updateStatus("Error: " + err.message);
+          img.onerror = function () {
+            updateStatus("Error: Failed to load image");
             statusText.className = "status-error";
             URL.revokeObjectURL(objectUrl);
-          }
+            img.onload = null;
+            img.onerror = null;
+            resolve();
+          };
 
-          img.onload = null;
-          img.onerror = null;
-        };
-
-        img.onerror = function () {
-          updateStatus("Error: Failed to load image");
-          statusText.className = "status-error";
-          URL.revokeObjectURL(objectUrl);
-          img.onload = null;
-          img.onerror = null;
-        };
-
-        img.src = objectUrl;
+          img.src = objectUrl;
+        });
       }
 
-      function removeImage(index) {
+      async function removeImage(index) {
         if (index < 0 || index >= images.length) return;
+
+        const imageId = images[index].id;
 
         // Revoke URL
         URL.revokeObjectURL(images[index].url);
@@ -1920,6 +1956,15 @@
         // Adjust currentIndex if needed
         if (currentIndex >= images.length) {
           currentIndex = Math.max(0, images.length - 1);
+        }
+
+        // Delete from IndexedDB
+        if (imageDB && imageId !== undefined) {
+          try {
+            await deleteImageFromDB(imageId);
+          } catch (err) {
+            console.warn("Failed to delete image from DB:", err);
+          }
         }
 
         // Update UI
@@ -2467,6 +2512,117 @@
         } catch (e) {
           console.warn("Failed to load settings:", e);
         }
+      }
+
+      // IndexedDB for image persistence
+      let imageDB = null;
+      let imageIdCounter = 0;
+
+      function openImageDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('ParticleMorphImages', 1);
+
+          request.onerror = () => reject(request.error);
+
+          request.onsuccess = () => {
+            imageDB = request.result;
+            resolve(imageDB);
+          };
+
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('images')) {
+              db.createObjectStore('images');
+            }
+          };
+        });
+      }
+
+      function saveImageToDB(blob, id) {
+        if (!imageDB) return Promise.reject('DB not open');
+        return new Promise((resolve, reject) => {
+          const tx = imageDB.transaction('images', 'readwrite');
+          const store = tx.objectStore('images');
+          const request = store.put(blob, id);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function deleteImageFromDB(id) {
+        if (!imageDB) return Promise.reject('DB not open');
+        return new Promise((resolve, reject) => {
+          const tx = imageDB.transaction('images', 'readwrite');
+          const store = tx.objectStore('images');
+          const request = store.delete(id);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function clearImageDB() {
+        if (!imageDB) return Promise.reject('DB not open');
+        return new Promise((resolve, reject) => {
+          const tx = imageDB.transaction('images', 'readwrite');
+          const store = tx.objectStore('images');
+          const request = store.clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function loadImagesFromDB() {
+        if (!imageDB) return;
+
+        return new Promise((resolve, reject) => {
+          const tx = imageDB.transaction('images', 'readonly');
+          const store = tx.objectStore('images');
+          const request = store.openCursor();
+          const blobs = [];
+          const ids = [];
+
+          request.onsuccess = async (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+              blobs.push(cursor.value);
+              ids.push(parseInt(cursor.key));
+              cursor.continue();
+            } else {
+              // Done collecting
+              if (blobs.length === 0) {
+                resolve();
+                return;
+              }
+
+              // Show loading status
+              const statusText = document.getElementById("status-text");
+              statusText.innerHTML = '<span class="spinner"></span>Restoring images...';
+              statusText.className = "status-loading";
+
+              // Process each blob
+              for (let i = 0; i < blobs.length; i++) {
+                const blob = blobs[i];
+                const id = ids[i];
+                if (!blob) continue;
+
+                // Update ID counter to be higher than any existing ID
+                if (id >= imageIdCounter) imageIdCounter = id + 1;
+
+                // Convert blob to File-like object
+                const file = new File([blob], blob.name || `image_${i}.png`, { type: blob.type || 'image/png' });
+
+                // Use addImage but skip DB save (already in DB)
+                await addImageFromFile(file, false, id);
+              }
+
+              statusText.className = "";
+              updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
+              resolve();
+            }
+          };
+
+          request.onerror = () => reject(request.error);
+        });
       }
 
       // Drag & Drop Support

@@ -123,7 +123,7 @@ On touch devices:
 ### Performance
 
 - **FPS Counter** - Toggle in Animation section to show frame rate
-- **Settings Persistence** - All settings auto-save and restore on next visit
+- **Settings Persistence** - All settings and images auto-save and restore on next visit
 
 ### Auto BG Mode
 
