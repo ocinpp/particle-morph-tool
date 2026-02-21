@@ -556,6 +556,127 @@
         text-align: center;
         margin-top: 4px;
       }
+
+      /* Multi-image list */
+      .image-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 8px;
+      }
+
+      .image-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        margin-bottom: 4px;
+        transition: all 0.2s;
+      }
+
+      .image-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(0, 170, 255, 0.3);
+      }
+
+      .image-item.active {
+        border-color: #0af;
+        background: rgba(0, 170, 255, 0.1);
+      }
+
+      .image-item .number {
+        width: 20px;
+        height: 20px;
+        background: #333;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+        color: #888;
+        flex-shrink: 0;
+      }
+
+      .image-item.active .number {
+        background: #0af;
+        color: #000;
+      }
+
+      .image-item .preview {
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        object-fit: contain;
+        background: #222;
+        flex-shrink: 0;
+      }
+
+      .image-item .name {
+        flex: 1;
+        font-size: 10px;
+        color: #ccc;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .image-item .remove-btn {
+        width: 20px;
+        height: 20px;
+        background: transparent;
+        border: 1px solid #444;
+        border-radius: 4px;
+        color: #666;
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 12px;
+        padding: 0;
+        flex-shrink: 0;
+        transition: all 0.2s;
+      }
+
+      .image-item .remove-btn:hover {
+        border-color: #f44;
+        color: #f44;
+        background: rgba(255, 68, 68, 0.1);
+      }
+
+      .add-image-btn {
+        width: 100%;
+        padding: 8px;
+        background: rgba(0, 170, 255, 0.1);
+        border: 1px dashed rgba(0, 170, 255, 0.3);
+        border-radius: 6px;
+        color: #0af;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: bold;
+        transition: all 0.2s;
+      }
+
+      .add-image-btn:hover {
+        background: rgba(0, 170, 255, 0.2);
+        border-style: solid;
+      }
+
+      .image-counter {
+        font-size: 10px;
+        color: #888;
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      .image-counter .current {
+        color: #0af;
+        font-weight: bold;
+      }
+
+      #imageFileInput {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -580,22 +701,12 @@
         <div class="accordion-section open">
           <button class="accordion-header" type="button">Images <span class="arrow">▶</span></button>
           <div class="accordion-content">
-            <div class="input-group">
-              <label>Image A (Start Shape)</label>
-              <input type="file" id="imgA" accept="image/*" />
-              <div class="image-preview-container">
-                <img id="previewA" class="image-preview" alt="Preview A" />
-                <span id="filenameA" class="image-filename"></span>
-              </div>
+            <input type="file" id="imageFileInput" accept="image/*" multiple />
+            <div class="image-list" id="imageList">
+              <!-- Dynamic image items will be added here -->
             </div>
-            <div class="input-group">
-              <label>Image B (Target Shape)</label>
-              <input type="file" id="imgB" accept="image/*" />
-              <div class="image-preview-container">
-                <img id="previewB" class="image-preview" alt="Preview B" />
-                <span id="filenameB" class="image-filename"></span>
-              </div>
-            </div>
+            <button class="add-image-btn" id="addImageBtn">+ Add Image</button>
+            <div class="image-counter" id="imageCounter">Add 2+ images to start</div>
           </div>
         </div>
 
@@ -824,10 +935,9 @@
 
       let scene, camera, renderer, particles;
 
-      let cachedPosA = null;
-      let cachedColA = null;
-      let cachedPosB = null;
-      let cachedColB = null;
+      // Multi-image support: array of {pos, col, url, name}
+      let images = [];
+      let currentIndex = 0;  // Current image being displayed
 
       let isPlaying = false;
       let loopMode = true;
@@ -835,16 +945,11 @@
       let useGrayscale = false;
       let autoMode = false;
       let progress = 0;
-      let currentTarget = "B";
       let transitionMode = 0; // 0=default, 1=spiral, 2=explosion, 3=gravity
 
       let imageScale = 0.9;
       let canvasWidthPercent = 100;
       let canvasHeightPercent = 100;
-
-      // Cached object URLs for cleanup
-      let objectUrlA = null;
-      let objectUrlB = null;
 
       // Reusable canvas for image processing
       const processCanvas = document.createElement("canvas");
@@ -1048,13 +1153,8 @@
 
         window.addEventListener("resize", onWindowResize);
 
-        // Image Inputs
-        document
-          .getElementById("imgA")
-          .addEventListener("change", (e) => handleImageUpload(e, "A"));
-        document
-          .getElementById("imgB")
-          .addEventListener("change", (e) => handleImageUpload(e, "B"));
+        // Multi-image handlers
+        setupImageHandlers();
 
         // Main Button
         document
@@ -1382,21 +1482,12 @@
           animationFrameId = null;
         }
 
-        // Revoke object URLs
-        if (objectUrlA) {
-          URL.revokeObjectURL(objectUrlA);
-          objectUrlA = null;
-        }
-        if (objectUrlB) {
-          URL.revokeObjectURL(objectUrlB);
-          objectUrlB = null;
-        }
-
-        // Clear cached buffers
-        cachedPosA = null;
-        cachedColA = null;
-        cachedPosB = null;
-        cachedColB = null;
+        // Revoke all object URLs and clear images array
+        images.forEach(img => {
+          if (img.url) URL.revokeObjectURL(img.url);
+        });
+        images = [];
+        currentIndex = 0;
 
         // Dispose Three.js resources
         if (particles) {
@@ -1558,9 +1649,22 @@
         return { positions: pos, colors: col };
       }
 
-      function handleImageUpload(event, type) {
-        const file = event.target.files[0];
-        if (!file) return;
+      // Multi-image handling
+      function setupImageHandlers() {
+        const fileInput = document.getElementById("imageFileInput");
+        const addBtn = document.getElementById("addImageBtn");
+
+        addBtn.addEventListener("click", () => fileInput.click());
+
+        fileInput.addEventListener("change", (e) => {
+          const files = Array.from(e.target.files);
+          files.forEach(file => addImage(file));
+          fileInput.value = ""; // Reset for re-adding same file
+        });
+      }
+
+      function addImage(file) {
+        if (!file || !file.type.startsWith("image/")) return;
 
         isPlaying = false;
         pauseCounter = 0;
@@ -1571,27 +1675,7 @@
         statusText.innerHTML = '<span class="spinner"></span>Processing...';
         statusText.className = "status-loading";
 
-        // Revoke old object URL if exists
-        if (type === "A" && objectUrlA) {
-          URL.revokeObjectURL(objectUrlA);
-        } else if (type === "B" && objectUrlB) {
-          URL.revokeObjectURL(objectUrlB);
-        }
-
-        // Create and cache new object URL
         const objectUrl = URL.createObjectURL(file);
-        if (type === "A") {
-          objectUrlA = objectUrl;
-        } else {
-          objectUrlB = objectUrl;
-        }
-
-        // Update preview thumbnail
-        const preview = document.getElementById("preview" + type);
-        const filename = document.getElementById("filename" + type);
-        preview.src = objectUrl;
-        preview.classList.add("loaded");
-        filename.textContent = file.name;
 
         const img = new Image();
         img.onload = function () {
@@ -1614,40 +1698,31 @@
 
             const buffers = getImageBuffers(imgDataObj);
 
-            if (type === "A") {
-              cachedPosA = buffers.positions;
-              cachedColA = buffers.colors;
+            // Add to images array
+            images.push({
+              pos: buffers.positions,
+              col: buffers.colors,
+              url: objectUrl,
+              name: file.name
+            });
 
-              particles.geometry.attributes.aStartPosition.array.set(
-                cachedPosA,
-              );
-              particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
-              particles.geometry.attributes.aColorStart.array.set(cachedColA);
-              particles.geometry.attributes.aColorEnd.array.set(cachedColA);
+            // Update UI
+            updateImageList();
 
-              particles.geometry.attributes.aStartPosition.needsUpdate = true;
-              particles.geometry.attributes.aEndPosition.needsUpdate = true;
-              particles.geometry.attributes.aColorStart.needsUpdate = true;
-              particles.geometry.attributes.aColorEnd.needsUpdate = true;
-
-              particles.material.uniforms.uProgress.value = 1.0;
-
-              currentTarget = "B";
-              progress = 1.0;
-            } else {
-              cachedPosB = buffers.positions;
-              cachedColB = buffers.colors;
+            // If first image, display it
+            if (images.length === 1) {
+              displayImage(0);
             }
 
-            updateStatus("Ready" + (cachedPosA && cachedPosB ? " - Press Space" : ""));
+            updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
             statusText.className = "";
           } catch (err) {
             console.error("Image processing error:", err);
             updateStatus("Error: " + err.message);
             statusText.className = "status-error";
+            URL.revokeObjectURL(objectUrl);
           }
 
-          // Clean up Image object
           img.onload = null;
           img.onerror = null;
         };
@@ -1655,6 +1730,7 @@
         img.onerror = function () {
           updateStatus("Error: Failed to load image");
           statusText.className = "status-error";
+          URL.revokeObjectURL(objectUrl);
           img.onload = null;
           img.onerror = null;
         };
@@ -1662,9 +1738,108 @@
         img.src = objectUrl;
       }
 
+      function removeImage(index) {
+        if (index < 0 || index >= images.length) return;
+
+        // Revoke URL
+        URL.revokeObjectURL(images[index].url);
+
+        // Remove from array
+        images.splice(index, 1);
+
+        // Adjust currentIndex if needed
+        if (currentIndex >= images.length) {
+          currentIndex = Math.max(0, images.length - 1);
+        }
+
+        // Update UI
+        updateImageList();
+
+        // Display current or clear
+        if (images.length > 0) {
+          displayImage(currentIndex);
+        } else {
+          // Clear particle positions
+          const empty = new Float32Array(PARTICLE_COUNT * 3);
+          particles.geometry.attributes.aStartPosition.array.set(empty);
+          particles.geometry.attributes.aEndPosition.array.set(empty);
+          particles.geometry.attributes.aColorStart.array.set(empty);
+          particles.geometry.attributes.aColorEnd.array.set(empty);
+          particles.geometry.attributes.aStartPosition.needsUpdate = true;
+          particles.geometry.attributes.aEndPosition.needsUpdate = true;
+          particles.geometry.attributes.aColorStart.needsUpdate = true;
+          particles.geometry.attributes.aColorEnd.needsUpdate = true;
+          progress = 0;
+        }
+
+        isPlaying = false;
+        updateUI();
+        updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
+      }
+
+      function updateImageList() {
+        const list = document.getElementById("imageList");
+        const counter = document.getElementById("imageCounter");
+
+        list.innerHTML = images.map((img, i) => `
+          <div class="image-item ${i === currentIndex ? 'active' : ''}" data-index="${i}">
+            <span class="number">${i + 1}</span>
+            <img class="preview" src="${img.url}" alt="Preview ${i + 1}" />
+            <span class="name">${img.name}</span>
+            <button class="remove-btn" data-index="${i}">×</button>
+          </div>
+        `).join("");
+
+        // Update counter
+        if (images.length === 0) {
+          counter.innerHTML = "Add 2+ images to start";
+        } else {
+          counter.innerHTML = `<span class="current">${currentIndex + 1}</span> of ${images.length}`;
+        }
+
+        // Add click handlers
+        list.querySelectorAll(".image-item").forEach(item => {
+          item.addEventListener("click", (e) => {
+            if (e.target.classList.contains("remove-btn")) return;
+            const index = parseInt(item.dataset.index);
+            if (!isPlaying && index !== currentIndex) {
+              currentIndex = index;
+              displayImage(index);
+              updateImageList();
+            }
+          });
+        });
+
+        list.querySelectorAll(".remove-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            removeImage(parseInt(btn.dataset.index));
+          });
+        });
+      }
+
+      function displayImage(index) {
+        if (!images[index] || !particles) return;
+
+        const img = images[index];
+        particles.geometry.attributes.aStartPosition.array.set(img.pos);
+        particles.geometry.attributes.aEndPosition.array.set(img.pos);
+        particles.geometry.attributes.aColorStart.array.set(img.col);
+        particles.geometry.attributes.aColorEnd.array.set(img.col);
+
+        particles.geometry.attributes.aStartPosition.needsUpdate = true;
+        particles.geometry.attributes.aEndPosition.needsUpdate = true;
+        particles.geometry.attributes.aColorStart.needsUpdate = true;
+        particles.geometry.attributes.aColorEnd.needsUpdate = true;
+
+        particles.material.uniforms.uProgress.value = 1.0;
+        progress = 1.0;
+        needsRender = true;
+      }
+
       function handleButtonClick() {
-        if (!cachedPosA || !cachedPosB) {
-          updateStatus("Error: Upload Both!");
+        if (images.length < 2) {
+          updateStatus("Error: Need 2+ images!");
           return;
         }
 
@@ -1762,28 +1937,29 @@
       }
 
       function swapBuffers() {
-        if (currentTarget === "B") {
-          particles.geometry.attributes.aStartPosition.array.set(cachedPosA);
-          particles.geometry.attributes.aColorStart.array.set(cachedColA);
-          particles.geometry.attributes.aEndPosition.array.set(cachedPosB);
-          particles.geometry.attributes.aColorEnd.array.set(cachedColB);
-          currentTarget = "A";
-          updateStatus("Morphing A -> B");
-        } else {
-          particles.geometry.attributes.aStartPosition.array.set(cachedPosB);
-          particles.geometry.attributes.aColorStart.array.set(cachedColB);
-          particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
-          particles.geometry.attributes.aColorEnd.array.set(cachedColA);
-          currentTarget = "B";
-          updateStatus("Morphing B -> A");
-        }
+        if (images.length < 2) return;
+
+        const fromIndex = currentIndex;
+        const toIndex = (currentIndex + 1) % images.length;
+
+        const from = images[fromIndex];
+        const to = images[toIndex];
+
+        particles.geometry.attributes.aStartPosition.array.set(from.pos);
+        particles.geometry.attributes.aColorStart.array.set(from.col);
+        particles.geometry.attributes.aEndPosition.array.set(to.pos);
+        particles.geometry.attributes.aColorEnd.array.set(to.col);
 
         particles.geometry.attributes.aStartPosition.needsUpdate = true;
         particles.geometry.attributes.aEndPosition.needsUpdate = true;
         particles.geometry.attributes.aColorStart.needsUpdate = true;
         particles.geometry.attributes.aColorEnd.needsUpdate = true;
 
+        currentIndex = toIndex;
         progress = 0;
+
+        updateStatus(`Morphing ${fromIndex + 1} → ${toIndex + 1} of ${images.length}`);
+        updateImageList();
       }
 
       function animate() {
@@ -1843,57 +2019,38 @@
       }
 
       function reprocessImages() {
-        function processImage(file, type) {
-          return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = function() {
-              let w = img.width;
-              let h = img.height;
-              const maxDim = 1000;
-              if (w > maxDim || h > maxDim) {
-                const ratio = Math.min(maxDim / w, maxDim / h);
-                w *= ratio;
-                h *= ratio;
-              }
-              processCanvas.width = w;
-              processCanvas.height = h;
-              processCtx.clearRect(0, 0, w, h);
-              processCtx.drawImage(img, 0, 0, w, h);
-              const data = processCtx.getImageData(0, 0, w, h);
-              const buffers = getImageBuffers({ data: data.data, width: w, height: h });
+        if (images.length === 0) return;
 
-              if (type === "A") {
-                cachedPosA = buffers.positions;
-                cachedColA = buffers.colors;
+        images.forEach((imgData, index) => {
+          const img = new Image();
+          img.onload = function() {
+            let w = img.width;
+            let h = img.height;
+            const maxDim = 1000;
+            if (w > maxDim || h > maxDim) {
+              const ratio = Math.min(maxDim / w, maxDim / h);
+              w *= ratio;
+              h *= ratio;
+            }
+            processCanvas.width = w;
+            processCanvas.height = h;
+            processCtx.clearRect(0, 0, w, h);
+            processCtx.drawImage(img, 0, 0, w, h);
+            const data = processCtx.getImageData(0, 0, w, h);
+            const buffers = getImageBuffers({ data: data.data, width: w, height: h });
 
-                if (currentTarget === "B" && !isPlaying) {
-                  particles.geometry.attributes.aStartPosition.array.set(cachedPosA);
-                  particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
-                  particles.geometry.attributes.aColorStart.array.set(cachedColA);
-                  particles.geometry.attributes.aColorEnd.array.set(cachedColA);
-                  particles.geometry.attributes.aStartPosition.needsUpdate = true;
-                  particles.geometry.attributes.aEndPosition.needsUpdate = true;
-                  particles.geometry.attributes.aColorStart.needsUpdate = true;
-                  particles.geometry.attributes.aColorEnd.needsUpdate = true;
-                }
-              } else {
-                cachedPosB = buffers.positions;
-                cachedColB = buffers.colors;
-              }
-              img.onload = null;
-              resolve();
-            };
-            img.src = file;
-          });
-        }
+            images[index].pos = buffers.positions;
+            images[index].col = buffers.colors;
 
-        // Process both images using cached URLs
-        if (objectUrlA) {
-          processImage(objectUrlA, "A");
-        }
-        if (objectUrlB) {
-          processImage(objectUrlB, "B");
-        }
+            // Update display if this is the current image and not playing
+            if (index === currentIndex && !isPlaying) {
+              displayImage(currentIndex);
+            }
+
+            img.onload = null;
+          };
+          img.src = imgData.url;
+        });
       }
 
       function onWindowResize() {
@@ -2021,16 +2178,8 @@
 
         container.addEventListener("drop", (e) => {
           overlay.classList.remove("visible");
-          const files = e.dataTransfer.files;
-          if (files.length > 0 && files[0].type.startsWith("image/")) {
-            // Use first dropped image for Image A, second for Image B
-            const targetIndex = cachedPosA ? "B" : "A";
-            const input = document.getElementById("img" + targetIndex);
-            const dt = new DataTransfer();
-            dt.items.add(files[0]);
-            input.files = dt.files;
-            input.dispatchEvent(new Event("change"));
-          }
+          const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+          files.forEach(file => addImage(file));
         });
       }
 
