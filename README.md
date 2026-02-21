@@ -1,10 +1,11 @@
 # Particle Morph Tool
 
-A Three.js application that creates stunning particle morphing effects between two images using custom GLSL shaders.
+A Three.js application that creates stunning particle morphing effects between multiple images using custom GLSL shaders.
 
 ## Features
 
 - **100,000 particles** animating smoothly between image shapes
+- **Multi-image support** - cycle through unlimited images in sequence
 - **Custom GLSL shaders** with cubic easing and swirl effects
 - **4 transition effects**: Default Chaos, Spiral Vortex, Explosion, Reverse Gravity
 - **6 visual presets**: Default, Neon, Pastel, Ghost, Fire, Ice
@@ -14,11 +15,11 @@ A Three.js application that creates stunning particle morphing effects between t
 - **Staggered transitions** - particles move with randomized delays
 - **Color interpolation** - smooth or snap color transitions
 - **Grayscale mode** - toggle monochrome output
-- **Loop mode** - continuous A↔B morphing with pauses
+- **Loop mode** - continuous morphing through all images with pauses
 - **Mouse/touch interaction** - attract or repel particles
 - **Keyboard shortcuts** - Space to play/pause, Escape to toggle UI
-- **Image previews** - thumbnail and filename shown after upload
-- **Drag & drop** - drop images directly onto canvas
+- **Image list UI** - add, remove, and select images visually
+- **Drag & drop** - drop multiple images directly onto canvas
 - **Screenshot capture** - save current frame as PNG
 - **Collapsible UI** - hide controls for fullscreen viewing
 - **Auto BG mode** - automatically adjust settings based on background color
@@ -27,15 +28,27 @@ A Three.js application that creates stunning particle morphing effects between t
 ## Usage
 
 1. Open `morph.html` in a modern browser
-2. Upload **Image A** (start shape)
-3. Upload **Image B** (target shape)
-4. Click **Start Loop** to begin morphing
+2. Click **+ Add Image** to upload images (or drag & drop)
+3. Add at least **2 images** to enable morphing
+4. Click **Start Loop** to begin cycling through images
 
 ### Image Tips
 
 - Use images with transparent backgrounds (PNG) for best results
 - Images are scaled to fit the viewport
 - Particles sample from opaque pixels (alpha > 128)
+- Add multiple images to create longer sequences
+
+### Images Panel
+
+| Action | How |
+|--------|-----|
+| Add image | Click "+ Add Image" button or drag & drop onto canvas |
+| Remove image | Click the × button on any image |
+| View image | Click on an image in the list |
+| Reorder | (Coming soon) Drag images to reorder |
+
+The counter shows current position (e.g., "2 of 5").
 
 ## Controls
 

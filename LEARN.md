@@ -707,11 +707,10 @@ document.addEventListener("keydown", (e) => {
 let isPlaying = false;
 let loopMode = true;
 let progress = 0;
-let currentTarget = "B";
 
-// Cached data
-let cachedPosA = null;
-let cachedColA = null;
+// Multi-image support: array of image data
+let images = [];  // [{pos, col, url, name}, ...]
+let currentIndex = 0;  // Currently displayed image
 
 // Functions update state and UI
 function updateUI() {
@@ -719,6 +718,44 @@ function updateUI() {
     btn.className = isPlaying ? "action-btn stop-state" : "action-btn start-state";
 }
 ```
+
+**Key Learnings:**
+- Use arrays instead of separate variables for scalable collections
+- Track current index for sequential operations
+- Keep related data together in objects (pos, col, url, name)
+
+### Multi-Image List UI
+
+```javascript
+function updateImageList() {
+    const list = document.getElementById("imageList");
+
+    // Generate HTML for each image
+    list.innerHTML = images.map((img, i) => `
+        <div class="image-item ${i === currentIndex ? 'active' : ''}" data-index="${i}">
+            <span class="number">${i + 1}</span>
+            <img class="preview" src="${img.url}" />
+            <span class="name">${img.name}</span>
+            <button class="remove-btn" data-index="${i}">×</button>
+        </div>
+    `).join("");
+
+    // Add click handlers after DOM update
+    list.querySelectorAll(".image-item").forEach(item => {
+        item.addEventListener("click", () => {
+            currentIndex = parseInt(item.dataset.index);
+            displayImage(currentIndex);
+            updateImageList();  // Re-render to update active state
+        });
+    });
+}
+```
+
+**Key Learnings:**
+- Use `data-*` attributes to pass data to event handlers
+- Re-render list after state changes for consistent UI
+- Add event listeners after innerHTML update (old listeners are lost)
+- Use template literals for dynamic HTML generation
 
 ### Canvas Image Processing
 

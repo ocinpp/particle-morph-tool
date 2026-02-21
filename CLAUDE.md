@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Single-file Three.js application for particle morphing effects between two images.
+Single-file Three.js application for particle morphing effects between multiple images.
 
 ## File Structure
 
@@ -47,16 +47,19 @@ particles-effects/
 
 ### Animation Flow
 
-1. User uploads images → `handleImageUpload()` extracts pixel data
+1. User adds images via button or drag & drop → `addImage()` extracts pixel data
 2. `getImageBuffers()` converts to position/color arrays
-3. Click Start → `swapBuffers()` sets start/end attributes
-4. `animate()` increments progress, swaps on completion if looping
+3. Images stored in `images[]` array with position, color, URL, and name
+4. Click Start → `swapBuffers()` sets start/end attributes from consecutive images
+5. `animate()` increments progress, cycles to next image on completion if looping
 
 ### Key Variables
 
 | Variable | Purpose |
 |----------|---------|
 | `PARTICLE_COUNT` | 100000 - total particles |
+| `images` | Array of {pos, col, url, name} for all loaded images |
+| `currentIndex` | Index of currently displayed image in the array |
 | `morphSpeed` | 0.012 (default) - progress increment per frame, adjustable via slider |
 | `MAX_DELAY` | 0.3 - max stagger delay (30% of progress) |
 | `PAUSE_DURATION` | 120 frames between morphs in loop mode |
@@ -72,15 +75,21 @@ particles-effects/
 
 | Function | Purpose |
 |----------|---------|
+| `setupImageHandlers()` | Initialize multi-image UI event listeners |
+| `addImage(file)` | Process and add image to the images array |
+| `removeImage(index)` | Remove image from array, revoke URL, update UI |
+| `updateImageList()` | Re-render the image list UI |
+| `displayImage(index)` | Show specific image in particle system |
+| `swapBuffers()` | Set up morph from current to next image |
 | `getLuminance(hexColor)` | Calculate perceived brightness of hex color |
 | `applyAutoSettings(hexColor)` | Auto-adjust blend/saturation/opacity based on BG |
 | `applyPreset(name)` | Apply named preset configuration |
 | `takeScreenshot()` | Capture current frame as PNG download |
 | `setupDragAndDrop()` | Initialize drag & drop for image upload |
 | `setupTouchSupport()` | Initialize touch event handlers |
-| `reprocessImages()` | Re-scale images when scale slider changes |
+| `reprocessImages()` | Re-scale all images when scale slider changes |
 | `updateCanvasSize()` | Resize canvas when width/height sliders change |
-| `cleanup()` | Cancel animation, revoke URLs, dispose Three.js resources, force WebGL context loss |
+| `cleanup()` | Cancel animation, revoke all URLs, dispose Three.js resources |
 
 ## Dependencies
 
@@ -92,20 +101,20 @@ particles-effects/
 - Uses ES modules for Three.js import
 - No external CSS or JS files needed
 - Images processed via canvas getImageData()
-- Object URLs used for image loading (cleaned up on page unload)
+- Object URLs used for image loading (cleaned up on page unload or image removal)
 - Compact UI with max-height and overflow scroll for smaller screens
 - Keyboard shortcuts: Space (play/pause), Escape (toggle UI)
 - Loading spinner shown during image processing
 - WebGL context loss/recovery handled gracefully
-- Image preview thumbnails displayed after upload
-- Drag & drop support for image upload
+- Multi-image support with dynamic list UI
+- Drag & drop support for multiple images at once
 - Touch support: tap (attract), long press (repel)
 - Screenshot capture via canvas toDataURL
 - 6 visual presets with full parameter sets
 
 ## Potential Enhancements
 
-- Support for more than 2 images
+- Image reordering via drag & drop in list
 - Customizable particle count via UI
 - Export animation as video/GIF
 - Additional transition effects
