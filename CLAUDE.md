@@ -56,7 +56,7 @@ particles-effects/
 | Variable | Purpose |
 |----------|---------|
 | `PARTICLE_COUNT` | 100000 - total particles |
-| `MORPH_SPEED` | 0.012 - progress increment per frame |
+| `morphSpeed` | 0.012 (default) - progress increment per frame, adjustable via slider |
 | `MAX_DELAY` | 0.3 - max stagger delay (30% of progress) |
 | `PAUSE_DURATION` | 120 frames between morphs in loop mode |
 | `imageScale` | 0.9 - scale factor for particle images |
@@ -86,6 +86,10 @@ particles-effects/
 - Images processed via canvas getImageData()
 - Object URLs used for image loading (cleaned up on page unload)
 - Compact UI with max-height and overflow scroll for smaller screens
+- Keyboard shortcuts: Space (play/pause), Escape (toggle UI)
+- Loading spinner shown during image processing
+- WebGL context loss/recovery handled gracefully
+- Image preview thumbnails displayed after upload
 
 ## Potential Enhancements
 

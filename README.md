@@ -7,14 +7,17 @@ A Three.js application that creates stunning particle morphing effects between t
 - **100,000 particles** animating smoothly between image shapes
 - **Custom GLSL shaders** with cubic easing and swirl effects
 - **4 transition effects**: Default Chaos, Spiral Vortex, Explosion, Reverse Gravity
+- **Adjustable speed** - control animation speed from 0.2x to 4.0x
 - **Staggered transitions** - particles move with randomized delays
 - **Color interpolation** - smooth or snap color transitions
 - **Grayscale mode** - toggle monochrome output
 - **Loop mode** - continuous A↔B morphing with pauses
 - **Mouse interaction** - attract or repel particles
+- **Keyboard shortcuts** - Space to play/pause, Escape to toggle UI
+- **Image previews** - thumbnail and filename shown after upload
 - **Collapsible UI** - hide controls for fullscreen viewing
 - **Auto BG mode** - automatically adjust settings based on background color
-- **Compact responsive UI** - fits on screen with scroll support
+- **Error handling** - graceful recovery from WebGL context loss
 
 ## Usage
 
@@ -55,12 +58,20 @@ A Three.js application that creates stunning particle morphing effects between t
 
 | Control | Range | Description |
 |---------|-------|-------------|
+| Speed | 0.2-4.0x | Animation speed multiplier |
 | Image Scale | 10-100% | Scale of the particle image |
 | Canvas Width | 20-100% | Viewport width percentage |
 | Canvas Height | 20-100% | Viewport height percentage |
 | Opacity | 10-400% | Particle transparency |
 | Brightness | 50-300% | Particle brightness multiplier |
 | Saturation | 0-300% | Color saturation (boost for light backgrounds) |
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Space` | Play/Pause animation |
+| `Escape` | Toggle UI panel visibility |
 
 ### Auto BG Mode
 

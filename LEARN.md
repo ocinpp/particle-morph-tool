@@ -474,6 +474,63 @@ function cleanup() {
 - `forceContextLoss()` ensures WebGL context is released
 - Clear references (`= null`) helps garbage collection
 
+### WebGL Context Loss Handling
+
+```javascript
+// Handle WebGL context loss (e.g., when browser runs low on GPU memory)
+renderer.domElement.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault();
+    console.log("WebGL context lost");
+    isPlaying = false;
+});
+
+renderer.domElement.addEventListener("webglcontextrestored", () => {
+    console.log("WebGL context restored");
+    // Reinitialize resources
+    createParticleSystem();
+});
+```
+
+**Key Learnings:**
+- `e.preventDefault()` keeps the context recoverable
+- Context loss can happen when switching tabs, suspending, or GPU pressure
+- Must re-create all GPU resources (geometries, textures, materials) after restore
+- Always inform users when context is lost/restored
+
+### Image Loading Error Handling
+
+```javascript
+const img = new Image();
+img.onload = function () {
+    try {
+        // Process image...
+        processCanvas.width = w;
+        processCanvas.height = h;
+        processCtx.drawImage(img, 0, 0, w, h);
+        // ...
+    } catch (err) {
+        console.error("Processing error:", err);
+        updateStatus("Error: " + err.message);
+    }
+    img.onload = null;
+    img.onerror = null;  // Clean up both handlers
+};
+
+img.onerror = function () {
+    updateStatus("Error: Failed to load image");
+    img.onload = null;
+    img.onerror = null;
+};
+
+img.src = objectUrl;
+```
+
+**Key Learnings:**
+- Always handle both `onload` and `onerror`
+- Use try/catch for canvas operations (can throw on tainted canvases)
+- Clean up both handlers to prevent memory leaks
+- Provide user feedback on errors
+
 ---
 
 ## JavaScript Patterns
@@ -490,6 +547,28 @@ document.getElementById("slider").addEventListener("input", (e) => {
     }
 });
 ```
+
+### Keyboard Shortcuts
+
+```javascript
+document.addEventListener("keydown", (e) => {
+    // Ignore if user is typing in an input field
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+
+    if (e.code === "Space") {
+        e.preventDefault();  // Prevent page scroll
+        togglePlay();
+    } else if (e.code === "Escape") {
+        e.preventDefault();
+        toggleUI();
+    }
+});
+```
+
+**Key Learnings:**
+- Check `e.target.tagName` to avoid triggering when typing
+- `e.preventDefault()` stops default browser behavior (e.g., space scrolls page)
+- Use `e.code` for physical key detection (locale-independent)
 
 ### State Management
 
