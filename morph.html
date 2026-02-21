@@ -637,6 +637,7 @@
       // Mouse interaction
       const mouse = new THREE.Vector2();
       const mouseWorld = new THREE.Vector3();
+      const mouseVector = new THREE.Vector3(); // Reusable vector to avoid allocation
       let mouseMode = 0; // 0=off, 1=attract, 2=repel
 
       // Performance optimization: tab visibility
@@ -999,10 +1000,10 @@
           mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
           mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-          // Project to z-plane where particles live
-          const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-          vector.unproject(camera);
-          const dir = vector.sub(camera.position).normalize();
+          // Project to z-plane where particles live (reuse mouseVector)
+          mouseVector.set(mouse.x, mouse.y, 0.5);
+          mouseVector.unproject(camera);
+          const dir = mouseVector.sub(camera.position).normalize();
           const distance = -camera.position.z / dir.z;
           mouseWorld.copy(camera.position).add(dir.multiplyScalar(distance));
 
@@ -1048,11 +1049,14 @@
 
         // Dispose Three.js resources
         if (particles) {
+          scene.remove(particles);
           particles.geometry.dispose();
           particles.material.dispose();
+          particles = null;
         }
         if (renderer) {
           renderer.dispose();
+          renderer.forceContextLoss(); // Force WebGL context release
         }
       }
 
