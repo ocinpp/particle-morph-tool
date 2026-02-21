@@ -316,6 +316,7 @@ if (uTransitionMode < 0.5) {
 // Convert mouse position to 3D world coordinates
 const mouse = new THREE.Vector2();
 const mouseWorld = new THREE.Vector3();
+const mouseVector = new THREE.Vector3(); // Reusable to avoid allocation
 
 document.addEventListener("mousemove", (e) => {
     // Normalize to -1 to 1 range
@@ -323,10 +324,10 @@ document.addEventListener("mousemove", (e) => {
     mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-    // Project to z-plane where particles live
-    const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-    vector.unproject(camera);
-    const dir = vector.sub(camera.position).normalize();
+    // Project to z-plane where particles live (reuse mouseVector)
+    mouseVector.set(mouse.x, mouse.y, 0.5);
+    mouseVector.unproject(camera);
+    const dir = mouseVector.sub(camera.position).normalize();
     const distance = -camera.position.z / dir.z;
     mouseWorld.copy(camera.position).add(dir.multiplyScalar(distance));
 });
@@ -336,6 +337,7 @@ document.addEventListener("mousemove", (e) => {
 - `unproject()` converts screen coordinates to 3D ray
 - Divide by `dir.z` to find where ray intersects the particle plane
 - Mouse position updates are throttled for performance
+- **Reuse Vector3 objects** to avoid garbage collection from creating new objects every frame
 
 ### Shader Mouse Effect
 
@@ -439,12 +441,26 @@ window.addEventListener("beforeunload", cleanup);
 
 ```javascript
 function cleanup() {
+    // Cancel animation loop
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+
+    // Revoke object URLs
+    if (objectUrlA) URL.revokeObjectURL(objectUrlA);
+    if (objectUrlB) URL.revokeObjectURL(objectUrlB);
+
+    // Dispose Three.js resources
     if (particles) {
-        particles.geometry.dispose();
-        particles.material.dispose();
+        scene.remove(particles);           // Remove from scene first
+        particles.geometry.dispose();      // Free vertex buffers
+        particles.material.dispose();      // Free shader programs
+        particles = null;                  // Clear reference
     }
     if (renderer) {
-        renderer.dispose();
+        renderer.dispose();                // Free WebGL resources
+        renderer.forceContextLoss();       // Force context release
     }
 }
 ```
@@ -454,6 +470,9 @@ function cleanup() {
 - `geometry.dispose()` frees vertex buffers
 - `material.dispose()` frees shader programs and textures
 - `renderer.dispose()` frees WebGL context resources
+- `scene.remove()` before disposal prevents lingering references
+- `forceContextLoss()` ensures WebGL context is released
+- Clear references (`= null`) helps garbage collection
 
 ---
 

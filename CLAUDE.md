@@ -72,7 +72,7 @@ particles-effects/
 | `applyAutoSettings(hexColor)` | Auto-adjust blend/saturation/opacity based on BG |
 | `reprocessImages()` | Re-scale images when scale slider changes |
 | `updateCanvasSize()` | Resize canvas when width/height sliders change |
-| `cleanup()` | Revoke object URLs and dispose Three.js resources |
+| `cleanup()` | Cancel animation, revoke URLs, dispose Three.js resources, force WebGL context loss |
 
 ## Dependencies
 

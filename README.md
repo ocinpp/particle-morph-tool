@@ -86,6 +86,14 @@ A green "AUTO BG" indicator appears in the top right corner when active.
 - **Blend Mode**: Additive or Normal (configurable)
 - **Max Image Size**: 1000px (auto-scaled)
 
+## Performance
+
+- Mouse events throttled to ~30fps
+- Rendering paused when tab is hidden
+- Conditional rendering (only redraws when needed)
+- Object reuse to minimize garbage collection
+- Proper cleanup on page unload (URLs revoked, WebGL context released)
+
 ## Browser Support
 
 Requires WebGL 2.0. Works in modern Chrome, Firefox, Safari, and Edge.
