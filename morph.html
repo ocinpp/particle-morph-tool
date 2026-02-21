@@ -400,6 +400,25 @@
         display: block;
       }
 
+      /* FPS counter */
+      #fpsCounter {
+        position: fixed;
+        top: 10px;
+        right: 80px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #0f0;
+        font-size: 11px;
+        font-family: monospace;
+        padding: 4px 8px;
+        border-radius: 4px;
+        display: none;
+        z-index: 100;
+      }
+
+      #fpsCounter.visible {
+        display: block;
+      }
+
       /* Loading spinner */
       .spinner {
         display: inline-block;
@@ -686,6 +705,9 @@
     <!-- AUTO MODE INDICATOR -->
     <div id="autoIndicator">AUTO BG</div>
 
+    <!-- FPS COUNTER -->
+    <div id="fpsCounter">60 FPS</div>
+
     <div id="ui">
       <!-- HEADER WITH COLLAPSE BUTTON -->
       <div class="header-container">
@@ -764,6 +786,13 @@
                 <span class="slider-value" id="rotateSpeedValue">0.5°/s</span>
               </div>
               <input type="range" id="rotateSpeedSlider" min="1" max="200" value="50" />
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Show FPS:</span>
+              <label class="switch">
+                <input type="checkbox" id="fpsToggle" />
+                <span class="slider"></span>
+              </label>
             </div>
           </div>
         </div>
@@ -997,10 +1026,20 @@
       let zDepth = 2.0;
       let hueShift = 0;
       let invertColors = false;
+      let additiveBlend = true;
+      let opacity = 100;
+      let brightness = 100;
+      let saturation = 100;
 
       // Auto-rotate settings
       let autoRotate = false;
       let rotateSpeed = 0.5;  // Degrees per frame at base speed
+
+      // FPS counter
+      let showFPS = false;
+      let lastFrameTime = performance.now();
+      let frameCount = 0;
+      let fps = 60;
 
       // Mouse interaction
       const mouse = new THREE.Vector2();
@@ -1190,6 +1229,28 @@
 
         createParticleSystem();
 
+        // Load saved settings
+        loadSettings();
+        // Apply loaded settings to particle system
+        if (particles) {
+          particles.material.uniforms.uGrayscale.value = useGrayscale ? 1.0 : 0.0;
+          particles.material.uniforms.uInvert.value = invertColors ? 1.0 : 0.0;
+          particles.material.uniforms.uSmoothColors.value = smoothColors ? 1.0 : 0.0;
+          particles.material.uniforms.uTransitionMode.value = transitionMode;
+          particles.material.uniforms.uPointSize.value = pointSize;
+          particles.material.uniforms.uOpacity.value = opacity / 100;
+          particles.material.uniforms.uBrightness.value = brightness / 100;
+          particles.material.uniforms.uSaturation.value = saturation / 100;
+          particles.material.uniforms.uHueShift.value = hueShift;
+          particles.material.uniforms.uMouseMode.value = mouseMode;
+          particles.material.uniforms.uMouseRadius.value = mouseRadius;
+          particles.material.uniforms.uMouseStrength.value = mouseStrength;
+          particles.material.blending = additiveBlend
+            ? THREE.AdditiveBlending
+            : THREE.NormalBlending;
+        }
+        updateCanvasSize();
+
         window.addEventListener("resize", onWindowResize);
 
         // Multi-image handlers
@@ -1265,6 +1326,14 @@
             document.getElementById("rotateSpeedValue").textContent = rotateSpeed.toFixed(1) + "°/s";
           });
 
+        // FPS Toggle
+        document
+          .getElementById("fpsToggle")
+          .addEventListener("change", (e) => {
+            showFPS = e.target.checked;
+            document.getElementById("fpsCounter").classList.toggle("visible", showFPS);
+          });
+
         document
           .getElementById("grayToggle")
           .addEventListener("change", (e) => {
@@ -1287,8 +1356,9 @@
         document
           .getElementById("blendToggle")
           .addEventListener("change", (e) => {
+            additiveBlend = e.target.checked;
             if (particles) {
-              particles.material.blending = e.target.checked
+              particles.material.blending = additiveBlend
                 ? THREE.AdditiveBlending
                 : THREE.NormalBlending;
             }
@@ -1324,30 +1394,30 @@
         document
           .getElementById("opacitySlider")
           .addEventListener("input", (e) => {
-            const opacity = e.target.value / 100;
-            document.getElementById("opacityValue").textContent = e.target.value + "%";
+            opacity = parseInt(e.target.value);
+            document.getElementById("opacityValue").textContent = opacity + "%";
             if (particles)
-              particles.material.uniforms.uOpacity.value = opacity;
+              particles.material.uniforms.uOpacity.value = opacity / 100;
           });
 
         // Brightness Slider
         document
           .getElementById("brightnessSlider")
           .addEventListener("input", (e) => {
-            const brightness = e.target.value / 100;
-            document.getElementById("brightnessValue").textContent = e.target.value + "%";
+            brightness = parseInt(e.target.value);
+            document.getElementById("brightnessValue").textContent = brightness + "%";
             if (particles)
-              particles.material.uniforms.uBrightness.value = brightness;
+              particles.material.uniforms.uBrightness.value = brightness / 100;
           });
 
         // Saturation Slider
         document
           .getElementById("saturationSlider")
           .addEventListener("input", (e) => {
-            const saturation = e.target.value / 100;
-            document.getElementById("saturationValue").textContent = e.target.value + "%";
+            saturation = parseInt(e.target.value);
+            document.getElementById("saturationValue").textContent = saturation + "%";
             if (particles)
-              particles.material.uniforms.uSaturation.value = saturation;
+              particles.material.uniforms.uSaturation.value = saturation / 100;
           });
 
         // Hue Shift Slider
@@ -1537,6 +1607,16 @@
             e.preventDefault();
             handleButtonClick();
           }
+
+          // F key for fullscreen toggle
+          if (e.code === "KeyF") {
+            e.preventDefault();
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            } else {
+              document.documentElement.requestFullscreen();
+            }
+          }
         });
 
         // WebGL context loss handling
@@ -1554,7 +1634,10 @@
         });
 
         // Cleanup on page unload
-        window.addEventListener("beforeunload", cleanup);
+        window.addEventListener("beforeunload", () => {
+          saveSettings();
+          cleanup();
+        });
 
         animate();
       }
@@ -2049,6 +2132,18 @@
       function animate() {
         animationFrameId = requestAnimationFrame(animate);
 
+        // FPS calculation
+        if (showFPS) {
+          frameCount++;
+          const now = performance.now();
+          if (now - lastFrameTime >= 1000) {
+            fps = frameCount;
+            frameCount = 0;
+            lastFrameTime = now;
+            document.getElementById("fpsCounter").textContent = fps + " FPS";
+          }
+        }
+
         // Skip rendering when tab is hidden
         if (!isTabVisible) return;
 
@@ -2260,6 +2355,116 @@
 
         needsRender = true;
         updateStatus("Applied: " + name.charAt(0).toUpperCase() + name.slice(1));
+      }
+
+      // Settings persistence
+      function saveSettings() {
+        const settings = {
+          loopMode,
+          smoothColors,
+          transitionMode,
+          morphSpeed,
+          pauseDuration,
+          autoRotate,
+          rotateSpeed,
+          useGrayscale,
+          invertColors,
+          additiveBlend,
+          opacity,
+          brightness,
+          saturation,
+          hueShift,
+          pointSize,
+          zDepth,
+          imageScale,
+          canvasWidthPercent,
+          canvasHeightPercent,
+          mouseMode,
+          mouseRadius,
+          mouseStrength,
+          autoMode,
+          showFPS
+        };
+        localStorage.setItem("particleMorphSettings", JSON.stringify(settings));
+      }
+
+      function loadSettings() {
+        const saved = localStorage.getItem("particleMorphSettings");
+        if (!saved) return;
+
+        try {
+          const settings = JSON.parse(saved);
+
+          // Apply settings to variables
+          if (settings.loopMode !== undefined) loopMode = settings.loopMode;
+          if (settings.smoothColors !== undefined) smoothColors = settings.smoothColors;
+          if (settings.transitionMode !== undefined) transitionMode = settings.transitionMode;
+          if (settings.morphSpeed !== undefined) morphSpeed = settings.morphSpeed;
+          if (settings.pauseDuration !== undefined) pauseDuration = settings.pauseDuration;
+          if (settings.autoRotate !== undefined) autoRotate = settings.autoRotate;
+          if (settings.rotateSpeed !== undefined) rotateSpeed = settings.rotateSpeed;
+          if (settings.useGrayscale !== undefined) useGrayscale = settings.useGrayscale;
+          if (settings.invertColors !== undefined) invertColors = settings.invertColors;
+          if (settings.additiveBlend !== undefined) additiveBlend = settings.additiveBlend;
+          if (settings.opacity !== undefined) opacity = settings.opacity;
+          if (settings.brightness !== undefined) brightness = settings.brightness;
+          if (settings.saturation !== undefined) saturation = settings.saturation;
+          if (settings.hueShift !== undefined) hueShift = settings.hueShift;
+          if (settings.pointSize !== undefined) pointSize = settings.pointSize;
+          if (settings.zDepth !== undefined) zDepth = settings.zDepth;
+          if (settings.imageScale !== undefined) imageScale = settings.imageScale;
+          if (settings.canvasWidthPercent !== undefined) canvasWidthPercent = settings.canvasWidthPercent;
+          if (settings.canvasHeightPercent !== undefined) canvasHeightPercent = settings.canvasHeightPercent;
+          if (settings.mouseMode !== undefined) mouseMode = settings.mouseMode;
+          if (settings.mouseRadius !== undefined) mouseRadius = settings.mouseRadius;
+          if (settings.mouseStrength !== undefined) mouseStrength = settings.mouseStrength;
+          if (settings.autoMode !== undefined) autoMode = settings.autoMode;
+          if (settings.showFPS !== undefined) showFPS = settings.showFPS;
+
+          // Update UI elements
+          document.getElementById("loopToggle").checked = loopMode;
+          document.getElementById("colorToggle").checked = smoothColors;
+          document.getElementById("transitionModeSelect").value = transitionMode;
+          document.getElementById("speedSlider").value = morphSpeed * 1000;
+          document.getElementById("speedValue").textContent = (morphSpeed / 0.012).toFixed(1) + "x";
+          document.getElementById("pauseSlider").value = pauseDuration;
+          document.getElementById("pauseValue").textContent = (pauseDuration / 60).toFixed(1) + "s";
+          document.getElementById("rotateToggle").checked = autoRotate;
+          document.getElementById("rotateSpeedSlider").value = rotateSpeed * 100;
+          document.getElementById("rotateSpeedValue").textContent = rotateSpeed.toFixed(1) + "°/s";
+          document.getElementById("grayToggle").checked = useGrayscale;
+          document.getElementById("invertToggle").checked = invertColors;
+          document.getElementById("blendToggle").checked = additiveBlend;
+          document.getElementById("opacitySlider").value = opacity;
+          document.getElementById("opacityValue").textContent = opacity + "%";
+          document.getElementById("brightnessSlider").value = brightness;
+          document.getElementById("brightnessValue").textContent = brightness + "%";
+          document.getElementById("saturationSlider").value = saturation;
+          document.getElementById("saturationValue").textContent = saturation + "%";
+          document.getElementById("hueSlider").value = hueShift * 360;
+          document.getElementById("hueValue").textContent = Math.round(hueShift * 360) + "°";
+          document.getElementById("pointSizeSlider").value = pointSize;
+          document.getElementById("pointSizeValue").textContent = pointSize.toFixed(1);
+          document.getElementById("zDepthSlider").value = zDepth;
+          document.getElementById("zDepthValue").textContent = zDepth.toFixed(1);
+          document.getElementById("scaleSlider").value = imageScale * 100;
+          document.getElementById("scaleValue").textContent = Math.round(imageScale * 100) + "%";
+          document.getElementById("canvasWidthSlider").value = canvasWidthPercent;
+          document.getElementById("canvasWidthValue").textContent = canvasWidthPercent + "%";
+          document.getElementById("canvasHeightSlider").value = canvasHeightPercent;
+          document.getElementById("canvasHeightValue").textContent = canvasHeightPercent + "%";
+          document.getElementById("mouseModeSelect").value = mouseMode;
+          document.getElementById("mouseRadiusSlider").value = mouseRadius;
+          document.getElementById("mouseRadiusValue").textContent = mouseRadius;
+          document.getElementById("mouseStrengthSlider").value = mouseStrength * 100;
+          document.getElementById("mouseStrengthValue").textContent = Math.round(mouseStrength * 100) + "%";
+          document.getElementById("autoToggle").checked = autoMode;
+          document.getElementById("autoIndicator").classList.toggle("visible", autoMode);
+          document.getElementById("fpsToggle").checked = showFPS;
+          document.getElementById("fpsCounter").classList.toggle("visible", showFPS);
+        } catch (e) {
+          console.warn("Failed to load settings:", e);
+        }
       }
 
       // Drag & Drop Support

@@ -74,6 +74,11 @@ particles-effects/
 | `autoMode` | false - auto-adjust settings based on background |
 | `transitionMode` | 0-3 - transition effect (default/spiral/explosion/gravity) |
 | `mouseMode` | 0-2 - mouse interaction (off/attract/repel) |
+| `showFPS` | false - show FPS counter in corner |
+| `additiveBlend` | true - use additive blending for glow effect |
+| `opacity` | 100 (default) - particle opacity percentage |
+| `brightness` | 100 (default) - particle brightness percentage |
+| `saturation` | 100 (default) - color saturation percentage |
 
 ### Key Functions
 
@@ -107,7 +112,9 @@ particles-effects/
 - Images processed via canvas getImageData()
 - Object URLs used for image loading (cleaned up on page unload or image removal)
 - Compact UI with max-height and overflow scroll for smaller screens
-- Keyboard shortcuts: Space (play/pause), Escape (toggle UI)
+- Keyboard shortcuts: Space (play/pause), Escape (toggle UI), F (fullscreen)
+- Settings persistence via localStorage (auto-save on page unload)
+- FPS counter toggle for performance monitoring
 - Loading spinner shown during image processing
 - WebGL context loss/recovery handled gracefully
 - Multi-image support with dynamic list UI

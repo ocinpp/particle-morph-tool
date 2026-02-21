@@ -65,6 +65,7 @@ The counter shows current position (e.g., "2 of 5").
 | Grayscale | Convert output to monochrome |
 | Invert Colors | Invert all colors (negative effect) |
 | Auto Rotate | Continuously rotate particles around Y-axis |
+| Show FPS | Display frame rate counter in top right |
 | Auto (for BG) | Auto-adjust settings based on background brightness |
 | Additive Blend | Glow effect (best for dark backgrounds) |
 
@@ -117,6 +118,12 @@ On touch devices:
 |-----|--------|
 | `Space` | Play/Pause animation |
 | `Escape` | Toggle UI panel visibility |
+| `F` | Toggle fullscreen mode |
+
+### Performance
+
+- **FPS Counter** - Toggle in Animation section to show frame rate
+- **Settings Persistence** - All settings auto-save and restore on next visit
 
 ### Auto BG Mode
 
