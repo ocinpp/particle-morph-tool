@@ -25,7 +25,7 @@ particles-effects/
 **Particle System**
 - 100,000 particles via BufferGeometry
 - Attributes: position, aStartPosition, aEndPosition, aColorStart, aColorEnd, aRandomOffset
-- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale, uTransitionMode, uOpacity, uBrightness, uSaturation, uMouse, uMouseMode, uMouseRadius, uMouseStrength
+- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale, uTransitionMode, uPointSize, uOpacity, uBrightness, uSaturation, uHueShift, uMouse, uMouseMode, uMouseRadius, uMouseStrength
 
 **Vertex Shader**
 - Position interpolation with cubic easing
@@ -43,6 +43,7 @@ particles-effects/
 - Alpha falloff via smoothstep
 - Brightness multiplier
 - Saturation adjustment via grayscale luminance mix
+- Hue shift via RGB↔HSV conversion
 
 ### Animation Flow
 
@@ -60,6 +61,9 @@ particles-effects/
 | `MAX_DELAY` | 0.3 - max stagger delay (30% of progress) |
 | `PAUSE_DURATION` | 120 frames between morphs in loop mode |
 | `imageScale` | 0.9 - scale factor for particle images |
+| `pointSize` | 3.0 (default) - particle point size |
+| `zDepth` | 2.0 (default) - Z-axis spread for particles |
+| `hueShift` | 0 (default) - hue rotation 0-1 (mapped from 0-360°) |
 | `autoMode` | false - auto-adjust settings based on background |
 | `transitionMode` | 0-3 - transition effect (default/spiral/explosion/gravity) |
 | `mouseMode` | 0-2 - mouse interaction (off/attract/repel) |
@@ -70,6 +74,10 @@ particles-effects/
 |----------|---------|
 | `getLuminance(hexColor)` | Calculate perceived brightness of hex color |
 | `applyAutoSettings(hexColor)` | Auto-adjust blend/saturation/opacity based on BG |
+| `applyPreset(name)` | Apply named preset configuration |
+| `takeScreenshot()` | Capture current frame as PNG download |
+| `setupDragAndDrop()` | Initialize drag & drop for image upload |
+| `setupTouchSupport()` | Initialize touch event handlers |
 | `reprocessImages()` | Re-scale images when scale slider changes |
 | `updateCanvasSize()` | Resize canvas when width/height sliders change |
 | `cleanup()` | Cancel animation, revoke URLs, dispose Three.js resources, force WebGL context loss |
@@ -90,11 +98,15 @@ particles-effects/
 - Loading spinner shown during image processing
 - WebGL context loss/recovery handled gracefully
 - Image preview thumbnails displayed after upload
+- Drag & drop support for image upload
+- Touch support: tap (attract), long press (repel)
+- Screenshot capture via canvas toDataURL
+- 6 visual presets with full parameter sets
 
 ## Potential Enhancements
 
 - Support for more than 2 images
 - Customizable particle count via UI
 - Export animation as video/GIF
-- Touch/mobile gesture support
 - Additional transition effects
+- Audio reactive mode

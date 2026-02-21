@@ -7,14 +7,19 @@ A Three.js application that creates stunning particle morphing effects between t
 - **100,000 particles** animating smoothly between image shapes
 - **Custom GLSL shaders** with cubic easing and swirl effects
 - **4 transition effects**: Default Chaos, Spiral Vortex, Explosion, Reverse Gravity
+- **6 visual presets**: Default, Neon, Pastel, Ghost, Fire, Ice
 - **Adjustable speed** - control animation speed from 0.2x to 4.0x
+- **Particle customization** - size and Z-depth control
+- **Color effects** - hue shift, saturation, brightness controls
 - **Staggered transitions** - particles move with randomized delays
 - **Color interpolation** - smooth or snap color transitions
 - **Grayscale mode** - toggle monochrome output
 - **Loop mode** - continuous A↔B morphing with pauses
-- **Mouse interaction** - attract or repel particles
+- **Mouse/touch interaction** - attract or repel particles
 - **Keyboard shortcuts** - Space to play/pause, Escape to toggle UI
 - **Image previews** - thumbnail and filename shown after upload
+- **Drag & drop** - drop images directly onto canvas
+- **Screenshot capture** - save current frame as PNG
 - **Collapsible UI** - hide controls for fullscreen viewing
 - **Auto BG mode** - automatically adjust settings based on background color
 - **Error handling** - graceful recovery from WebGL context loss
@@ -65,6 +70,26 @@ A Three.js application that creates stunning particle morphing effects between t
 | Opacity | 10-400% | Particle transparency |
 | Brightness | 50-300% | Particle brightness multiplier |
 | Saturation | 0-300% | Color saturation (boost for light backgrounds) |
+| Hue Shift | 0-360° | Rotate all colors around color wheel |
+| Point Size | 1.0-10.0 | Size of individual particles |
+| Z-Depth | 0-50 | Particle spread on Z-axis (3D depth) |
+
+### Presets
+
+| Preset | Description |
+|--------|-------------|
+| Default | Standard settings with additive blending |
+| Neon | High saturation, purple hue, spiral transition |
+| Pastel | Soft colors, lower saturation, explosion transition |
+| Ghost | Low opacity, ethereal look, reverse gravity transition |
+| Fire | Warm colors, high brightness, reverse gravity transition |
+| Ice | Cool blue hue, spiral transition |
+
+### Touch Support
+
+On touch devices:
+- **Tap** - Attract particles briefly (1 second)
+- **Long press** - Repel particles while holding
 
 ### Keyboard Shortcuts
 

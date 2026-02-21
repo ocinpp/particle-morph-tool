@@ -365,6 +365,53 @@ if (uMouseMode > 0.5) {
 - `normalize()` ensures consistent strength regardless of distance
 - Mode selection uses same pattern as transition effects
 
+### Touch Support
+
+```javascript
+function setupTouchSupport() {
+    let touchStartTime = 0;
+    let touchTimeout = null;
+    const LONG_PRESS_DURATION = 500;
+
+    renderer.domElement.addEventListener("touchstart", (e) => {
+        touchStartTime = Date.now();
+        touchTimeout = setTimeout(() => {
+            // Long press = repel mode
+            mouseMode = 2;
+            particles.material.uniforms.uMouseMode.value = 2;
+        }, LONG_PRESS_DURATION);
+    }, { passive: true });
+
+    renderer.domElement.addEventListener("touchend", () => {
+        clearTimeout(touchTimeout);
+        const duration = Date.now() - touchStartTime;
+
+        if (duration < LONG_PRESS_DURATION) {
+            // Short tap = attract mode briefly
+            mouseMode = 1;
+            particles.material.uniforms.uMouseMode.value = 1;
+            setTimeout(() => {
+                mouseMode = 0;
+                particles.material.uniforms.uMouseMode.value = 0;
+            }, 1000);
+        }
+    }, { passive: true });
+
+    renderer.domElement.addEventListener("touchmove", (e) => {
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            // Convert touch to world coordinates same as mouse...
+        }
+    }, { passive: true });
+}
+```
+
+**Key Learnings:**
+- Use `{ passive: true }` for better scroll performance
+- Long press detection via `setTimeout` and duration check
+- `e.touches[0]` gets the first touch point
+- Same world coordinate projection as mouse events
+
 ---
 
 ## Color Theory in Shaders
@@ -405,6 +452,40 @@ vec3 result = mix(grayscale, color, uSaturation);
 |-----------|--------|----------|
 | Brightness (multiply) | Makes colors lighter but also washes them out | Dark backgrounds |
 | Saturation (grayscale mix) | Makes colors more/less intense | Light backgrounds |
+
+### HSV Color Manipulation in Shaders
+
+For hue shifting, convert RGB to HSV, shift the hue, then convert back:
+
+```glsl
+// Convert RGB to HSV
+vec3 rgb2hsv(vec3 c) {
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+// Convert HSV to RGB
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+// Apply hue shift
+vec3 hsv = rgb2hsv(color);
+hsv.x = fract(hsv.x + uHueShift);  // Shift hue (wrap around)
+color = hsv2rgb(hsv);
+```
+
+**Key Learnings:**
+- HSV (Hue, Saturation, Value) separates color into intuitive components
+- Hue is a 0-1 value that wraps (red=0, green=0.33, blue=0.67)
+- `fract()` ensures hue wraps around when it exceeds 1.0
+- `step()` and `mix()` create branch-free conditional logic in GLSL
 
 ---
 
