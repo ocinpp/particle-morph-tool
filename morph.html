@@ -129,6 +129,24 @@
         color: #0af;
       }
 
+      .reset-btn {
+        background: transparent;
+        border: 1px solid #444;
+        color: #888;
+        width: 24px;
+        height: 24px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 16px;
+        padding: 0;
+        transition: all 0.2s;
+      }
+      .reset-btn:hover {
+        border-color: #f50;
+        color: #f50;
+      }
+
       .input-group {
         margin-bottom: 8px;
       }
@@ -712,9 +730,10 @@
       <!-- HEADER WITH COLLAPSE BUTTON -->
       <div class="header-container">
         <h2>Particle Morph Tool</h2>
-        <button class="collapse-btn" id="collapseBtn" title="Hide Controls">
-          −
-        </button>
+        <div style="display: flex; gap: 6px;">
+          <button class="reset-btn" id="resetBtn" title="Reset Settings">↺</button>
+          <button class="collapse-btn" id="collapseBtn" title="Hide Controls">−</button>
+        </div>
       </div>
 
       <!-- ACCORDION SECTIONS -->
@@ -1486,6 +1505,12 @@
         restoreBtn.addEventListener("click", () => {
           uiPanel.classList.remove("hidden");
           restoreBtn.style.display = "none";
+        });
+
+        // Reset settings button
+        document.getElementById("resetBtn").addEventListener("click", () => {
+          if (!confirm("Reset all settings to default values?")) return;
+          resetSettings();
         });
 
         // Accordion toggle
@@ -2512,6 +2537,98 @@
         } catch (e) {
           console.warn("Failed to load settings:", e);
         }
+      }
+
+      function resetSettings() {
+        // Reset all variables to defaults
+        loopMode = true;
+        smoothColors = true;
+        transitionMode = 0;
+        morphSpeed = 0.012;
+        pauseDuration = 120;
+        autoRotate = false;
+        rotateSpeed = 0.5;
+        useGrayscale = false;
+        invertColors = false;
+        additiveBlend = true;
+        opacity = 100;
+        brightness = 100;
+        saturation = 100;
+        hueShift = 0;
+        pointSize = 3.0;
+        zDepth = 2.0;
+        imageScale = 0.9;
+        canvasWidthPercent = 100;
+        canvasHeightPercent = 100;
+        mouseMode = 0;
+        mouseRadius = 100;
+        mouseStrength = 1.0;
+        autoMode = false;
+        showFPS = false;
+
+        // Update UI elements
+        document.getElementById("loopToggle").checked = loopMode;
+        document.getElementById("colorToggle").checked = smoothColors;
+        document.getElementById("transitionModeSelect").value = transitionMode;
+        document.getElementById("speedSlider").value = 12;
+        document.getElementById("speedValue").textContent = "1.0x";
+        document.getElementById("pauseSlider").value = 120;
+        document.getElementById("pauseValue").textContent = "2.0s";
+        document.getElementById("rotateToggle").checked = autoRotate;
+        document.getElementById("rotateSpeedSlider").value = 50;
+        document.getElementById("rotateSpeedValue").textContent = "0.5°/s";
+        document.getElementById("fpsToggle").checked = showFPS;
+        document.getElementById("fpsCounter").classList.remove("visible");
+        document.getElementById("grayToggle").checked = useGrayscale;
+        document.getElementById("invertToggle").checked = invertColors;
+        document.getElementById("blendToggle").checked = additiveBlend;
+        document.getElementById("opacitySlider").value = 100;
+        document.getElementById("opacityValue").textContent = "100%";
+        document.getElementById("brightnessSlider").value = 100;
+        document.getElementById("brightnessValue").textContent = "100%";
+        document.getElementById("saturationSlider").value = 100;
+        document.getElementById("saturationValue").textContent = "100%";
+        document.getElementById("hueSlider").value = 0;
+        document.getElementById("hueValue").textContent = "0°";
+        document.getElementById("pointSizeSlider").value = 3;
+        document.getElementById("pointSizeValue").textContent = "3.0";
+        document.getElementById("zDepthSlider").value = 2;
+        document.getElementById("zDepthValue").textContent = "2.0";
+        document.getElementById("scaleSlider").value = 90;
+        document.getElementById("scaleValue").textContent = "90%";
+        document.getElementById("canvasWidthSlider").value = 100;
+        document.getElementById("canvasWidthValue").textContent = "100%";
+        document.getElementById("canvasHeightSlider").value = 100;
+        document.getElementById("canvasHeightValue").textContent = "100%";
+        document.getElementById("mouseModeSelect").value = 0;
+        document.getElementById("mouseRadiusSlider").value = 100;
+        document.getElementById("mouseRadiusValue").textContent = "100";
+        document.getElementById("mouseStrengthSlider").value = 100;
+        document.getElementById("mouseStrengthValue").textContent = "100%";
+        document.getElementById("autoToggle").checked = false;
+        document.getElementById("autoIndicator").classList.remove("visible");
+
+        // Apply to particle system
+        if (particles) {
+          particles.material.uniforms.uGrayscale.value = 0.0;
+          particles.material.uniforms.uInvert.value = 0.0;
+          particles.material.uniforms.uSmoothColors.value = 1.0;
+          particles.material.uniforms.uTransitionMode.value = 0;
+          particles.material.uniforms.uPointSize.value = 3.0;
+          particles.material.uniforms.uOpacity.value = 1.0;
+          particles.material.uniforms.uBrightness.value = 1.0;
+          particles.material.uniforms.uSaturation.value = 1.0;
+          particles.material.uniforms.uHueShift.value = 0;
+          particles.material.uniforms.uMouseMode.value = 0;
+          particles.material.uniforms.uMouseRadius.value = 100;
+          particles.material.uniforms.uMouseStrength.value = 1.0;
+          particles.material.blending = THREE.AdditiveBlending;
+          particles.rotation.y = 0;
+        }
+
+        updateCanvasSize();
+        needsRender = true;
+        updateStatus("Settings reset to defaults");
       }
 
       // IndexedDB for image persistence
