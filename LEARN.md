@@ -661,6 +661,60 @@ img.src = objectUrl;
 - Clean up both handlers to prevent memory leaks
 - Provide user feedback on errors
 
+### Async Image Processing with Race Conditions
+
+When reprocessing images asynchronously, the array might change during load:
+
+```javascript
+// Reusable buffer to avoid repeated allocations
+const emptyBuffer = new Float32Array(PARTICLE_COUNT * 3);
+
+function reprocessImages() {
+    images.forEach((imgData, index) => {
+        const img = new Image();
+
+        img.onload = function() {
+            // CRITICAL: Check if image still exists (could have been removed)
+            if (!images[index]) {
+                img.onload = null;
+                img.onerror = null;
+                return;
+            }
+
+            // Process image...
+            images[index].pos = buffers.positions;
+            images[index].col = buffers.colors;
+
+            img.onload = null;
+            img.onerror = null;
+        };
+
+        img.onerror = function() {
+            console.warn("Failed to reprocess image:", imgData.name);
+            img.onload = null;
+            img.onerror = null;
+        };
+
+        img.src = imgData.url;
+    });
+}
+```
+
+**Key Learnings:**
+- Array can change during async operations (user might remove images)
+- Always check `if (images[index])` before accessing
+- Clean up handlers in both success and error paths
+- Use reusable buffers instead of creating new typed arrays each time
+
+img.src = objectUrl;
+```
+
+**Key Learnings:**
+- Always handle both `onload` and `onerror`
+- Use try/catch for canvas operations (can throw on tainted canvases)
+- Clean up both handlers to prevent memory leaks
+- Provide user feedback on errors
+
 ---
 
 ## JavaScript Patterns
