@@ -744,6 +744,27 @@
               </div>
               <input type="range" id="speedSlider" min="2" max="40" value="12" />
             </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Pause Duration:</span>
+                <span class="slider-value" id="pauseValue">2.0s</span>
+              </div>
+              <input type="range" id="pauseSlider" min="0" max="300" value="120" />
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Auto Rotate:</span>
+              <label class="switch">
+                <input type="checkbox" id="rotateToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Rotate Speed:</span>
+                <span class="slider-value" id="rotateSpeedValue">0.5°/s</span>
+              </div>
+              <input type="range" id="rotateSpeedSlider" min="1" max="200" value="50" />
+            </div>
           </div>
         </div>
 
@@ -755,6 +776,13 @@
               <span class="toggle-label">Grayscale:</span>
               <label class="switch">
                 <input type="checkbox" id="grayToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Invert Colors:</span>
+              <label class="switch">
+                <input type="checkbox" id="invertToggle" />
                 <span class="slider"></span>
               </label>
             </div>
@@ -959,7 +987,7 @@
       let animationFrameId = null;
 
       let pauseCounter = 0;
-      const PAUSE_DURATION = 120;
+      let pauseDuration = 120;  // Frames between morphs (120 = 2 seconds at 60fps)
 
       let morphSpeed = 0.012;  // Variable speed (default 0.012 = 1.0x)
       const MAX_DELAY = 0.3;
@@ -968,6 +996,11 @@
       let pointSize = 3.0;
       let zDepth = 2.0;
       let hueShift = 0;
+      let invertColors = false;
+
+      // Auto-rotate settings
+      let autoRotate = false;
+      let rotateSpeed = 0.5;  // Degrees per frame at base speed
 
       // Mouse interaction
       const mouse = new THREE.Vector2();
@@ -1089,6 +1122,7 @@
             uniform float uBrightness;
             uniform float uSaturation;
             uniform float uHueShift;
+            uniform float uInvert;
 
             // Convert RGB to HSV
             vec3 rgb2hsv(vec3 c) {
@@ -1120,6 +1154,11 @@
                     vec3 hsv = rgb2hsv(color);
                     hsv.x = fract(hsv.x + uHueShift);
                     color = hsv2rgb(hsv);
+                }
+
+                // Apply invert
+                if (uInvert > 0.5) {
+                    color = vec3(1.0) - color;
                 }
 
                 // Apply saturation (grayscale luminance mix)
@@ -1197,6 +1236,35 @@
             document.getElementById("speedValue").textContent = (morphSpeed / 0.012).toFixed(1) + "x";
           });
 
+        // Pause Duration Slider
+        document
+          .getElementById("pauseSlider")
+          .addEventListener("input", (e) => {
+            pauseDuration = parseInt(e.target.value);
+            const seconds = (pauseDuration / 60).toFixed(1);
+            document.getElementById("pauseValue").textContent = seconds + "s";
+          });
+
+        // Auto Rotate Toggle
+        document
+          .getElementById("rotateToggle")
+          .addEventListener("change", (e) => {
+            autoRotate = e.target.checked;
+            if (!autoRotate && particles) {
+              // Reset rotation when disabled
+              particles.rotation.y = 0;
+              needsRender = true;
+            }
+          });
+
+        // Rotate Speed Slider
+        document
+          .getElementById("rotateSpeedSlider")
+          .addEventListener("input", (e) => {
+            rotateSpeed = e.target.value / 100;
+            document.getElementById("rotateSpeedValue").textContent = rotateSpeed.toFixed(1) + "°/s";
+          });
+
         document
           .getElementById("grayToggle")
           .addEventListener("change", (e) => {
@@ -1205,6 +1273,15 @@
               particles.material.uniforms.uGrayscale.value = useGrayscale
                 ? 1.0
                 : 0.0;
+          });
+
+        // Invert Colors Toggle
+        document
+          .getElementById("invertToggle")
+          .addEventListener("change", (e) => {
+            invertColors = e.target.checked;
+            if (particles)
+              particles.material.uniforms.uInvert.value = invertColors ? 1.0 : 0.0;
           });
 
         document
@@ -1435,13 +1512,8 @@
 
         // Keyboard shortcuts
         document.addEventListener("keydown", (e) => {
-          // Ignore if typing in input
-          if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
-
-          if (e.code === "Space") {
-            e.preventDefault();
-            handleButtonClick();
-          } else if (e.code === "Escape") {
+          // Allow ESC to work regardless of focus
+          if (e.code === "Escape") {
             e.preventDefault();
             const uiPanel = document.getElementById("ui");
             const restoreBtn = document.getElementById("restoreBtn");
@@ -1452,6 +1524,18 @@
               uiPanel.classList.add("hidden");
               restoreBtn.style.display = "block";
             }
+            return;
+          }
+
+          // Ignore Space if typing in text-like inputs
+          const isTextInput = e.target.tagName === "INPUT" &&
+            !["checkbox", "radio", "file", "range"].includes(e.target.type);
+          const isSelect = e.target.tagName === "SELECT";
+          if (isTextInput || isSelect) return;
+
+          if (e.code === "Space") {
+            e.preventDefault();
+            handleButtonClick();
           }
         });
 
@@ -1559,6 +1643,7 @@
             uBrightness: { value: 1.0 },
             uSaturation: { value: 1.0 },
             uHueShift: { value: 0.0 },
+            uInvert: { value: 0.0 },
             uMouse: { value: new THREE.Vector3() },
             uMouseMode: { value: 0.0 },
             uMouseRadius: { value: 100.0 },
@@ -1979,11 +2064,11 @@
           } else {
             if (loopMode) {
               pauseCounter++;
-              if (pauseCounter % 30 === 0 && pauseCounter <= PAUSE_DURATION) {
+              if (pauseCounter % 30 === 0 && pauseCounter <= pauseDuration) {
                 updateStatus("Pausing...");
               }
 
-              if (pauseCounter >= PAUSE_DURATION) {
+              if (pauseCounter >= pauseDuration) {
                 pauseCounter = 0;
                 swapBuffers();
               }
@@ -1994,6 +2079,12 @@
             }
           }
           particles.material.uniforms.uProgress.value = progress;
+          needsRender = true;
+        }
+
+        // Auto-rotate particles
+        if (autoRotate && particles) {
+          particles.rotation.y += rotateSpeed * 0.01 * (morphSpeed / 0.012);
           needsRender = true;
         }
 
