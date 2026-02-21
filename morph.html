@@ -1046,6 +1046,8 @@
       const mouseWorld = new THREE.Vector3();
       const mouseVector = new THREE.Vector3(); // Reusable vector to avoid allocation
       let mouseMode = 0; // 0=off, 1=attract, 2=repel
+      let mouseRadius = 100;
+      let mouseStrength = 1.0;
 
       // Performance optimization: tab visibility
       let isTabVisible = true;
@@ -1534,10 +1536,10 @@
         document
           .getElementById("mouseRadiusSlider")
           .addEventListener("input", (e) => {
-            const radius = parseFloat(e.target.value);
-            document.getElementById("mouseRadiusValue").textContent = radius;
+            mouseRadius = parseFloat(e.target.value);
+            document.getElementById("mouseRadiusValue").textContent = mouseRadius;
             if (particles) {
-              particles.material.uniforms.uMouseRadius.value = radius;
+              particles.material.uniforms.uMouseRadius.value = mouseRadius;
             }
           });
 
@@ -1545,10 +1547,10 @@
         document
           .getElementById("mouseStrengthSlider")
           .addEventListener("input", (e) => {
-            const strength = parseFloat(e.target.value);
-            document.getElementById("mouseStrengthValue").textContent = strength;
+            mouseStrength = parseFloat(e.target.value) / 100;
+            document.getElementById("mouseStrengthValue").textContent = Math.round(mouseStrength * 100) + "%";
             if (particles) {
-              particles.material.uniforms.uMouseStrength.value = strength;
+              particles.material.uniforms.uMouseStrength.value = mouseStrength;
             }
           });
 
