@@ -2728,24 +2728,29 @@
               statusText.className = "status-loading";
 
               // Process each blob
-              for (let i = 0; i < blobs.length; i++) {
-                const blob = blobs[i];
-                const id = ids[i];
-                if (!blob) continue;
+              try {
+                for (let i = 0; i < blobs.length; i++) {
+                  const blob = blobs[i];
+                  const id = ids[i];
+                  if (!blob) continue;
 
-                // Update ID counter to be higher than any existing ID
-                if (id >= imageIdCounter) imageIdCounter = id + 1;
+                  // Update ID counter to be higher than any existing ID
+                  if (id >= imageIdCounter) imageIdCounter = id + 1;
 
-                // Convert blob to File-like object
-                const file = new File([blob], blob.name || `image_${i}.png`, { type: blob.type || 'image/png' });
+                  // Convert blob to File-like object
+                  const file = new File([blob], blob.name || `image_${i}.png`, { type: blob.type || 'image/png' });
 
-                // Use addImage but skip DB save (already in DB)
-                await addImageFromFile(file, false, id);
+                  // Use addImage but skip DB save (already in DB)
+                  await addImageFromFile(file, false, id);
+                }
+
+                statusText.className = "";
+                updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
+                resolve();
+              } catch (err) {
+                statusText.className = "status-error";
+                reject(err);
               }
-
-              statusText.className = "";
-              updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
-              resolve();
             }
           };
 
