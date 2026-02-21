@@ -399,6 +399,79 @@
       #autoIndicator.visible {
         display: block;
       }
+
+      /* Loading spinner */
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(0, 170, 255, 0.3);
+        border-top-color: #0af;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .status-loading {
+        color: #ff0 !important;
+      }
+
+      .status-error {
+        color: #f00 !important;
+      }
+
+      /* Image preview thumbnails */
+      .image-preview-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .image-preview {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        border: 1px solid #444;
+        object-fit: contain;
+        background: #222;
+        display: none;
+      }
+
+      .image-preview.loaded {
+        display: block;
+      }
+
+      .image-filename {
+        font-size: 10px;
+        color: #888;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 150px;
+      }
+
+      /* Keyboard shortcuts hint */
+      .shortcuts-hint {
+        font-size: 9px;
+        color: #666;
+        text-align: center;
+        margin-top: 6px;
+        padding: 4px;
+        border-top: 1px solid #333;
+      }
+
+      .shortcuts-hint kbd {
+        background: #333;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-family: monospace;
+      }
     </style>
   </head>
   <body>
@@ -426,10 +499,18 @@
             <div class="input-group">
               <label>Image A (Start Shape)</label>
               <input type="file" id="imgA" accept="image/*" />
+              <div class="image-preview-container">
+                <img id="previewA" class="image-preview" alt="Preview A" />
+                <span id="filenameA" class="image-filename"></span>
+              </div>
             </div>
             <div class="input-group">
               <label>Image B (Target Shape)</label>
               <input type="file" id="imgB" accept="image/*" />
+              <div class="image-preview-container">
+                <img id="previewB" class="image-preview" alt="Preview B" />
+                <span id="filenameB" class="image-filename"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -460,6 +541,13 @@
                 <option value="2">Explosion</option>
                 <option value="3">Reverse Gravity</option>
               </select>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Speed:</span>
+                <span class="slider-value" id="speedValue">1.0x</span>
+              </div>
+              <input type="range" id="speedSlider" min="2" max="40" value="12" />
             </div>
           </div>
         </div>
@@ -577,6 +665,10 @@
 
       <button id="morphBtn" class="action-btn start-state">Start Loop</button>
 
+      <div class="shortcuts-hint">
+        <kbd>Space</kbd> Play/Pause &nbsp; <kbd>Esc</kbd> Toggle UI
+      </div>
+
       <div id="status-container">
         <div id="status-text">Waiting for images...</div>
       </div>
@@ -631,7 +723,7 @@
       let pauseCounter = 0;
       const PAUSE_DURATION = 120;
 
-      const MORPH_SPEED = 0.012;
+      let morphSpeed = 0.012;  // Variable speed (default 0.012 = 1.0x)
       const MAX_DELAY = 0.3;
 
       // Mouse interaction
@@ -833,6 +925,14 @@
             }
           });
 
+        // Speed Slider
+        document
+          .getElementById("speedSlider")
+          .addEventListener("input", (e) => {
+            morphSpeed = e.target.value / 1000;
+            document.getElementById("speedValue").textContent = (morphSpeed / 0.012).toFixed(1) + "x";
+          });
+
         document
           .getElementById("grayToggle")
           .addEventListener("change", (e) => {
@@ -1016,6 +1116,42 @@
         // Tab visibility handler for performance
         document.addEventListener("visibilitychange", () => {
           isTabVisible = !document.hidden;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener("keydown", (e) => {
+          // Ignore if typing in input
+          if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+
+          if (e.code === "Space") {
+            e.preventDefault();
+            handleButtonClick();
+          } else if (e.code === "Escape") {
+            e.preventDefault();
+            const uiPanel = document.getElementById("ui");
+            const restoreBtn = document.getElementById("restoreBtn");
+            if (uiPanel.classList.contains("hidden")) {
+              uiPanel.classList.remove("hidden");
+              restoreBtn.style.display = "none";
+            } else {
+              uiPanel.classList.add("hidden");
+              restoreBtn.style.display = "block";
+            }
+          }
+        });
+
+        // WebGL context loss handling
+        renderer.domElement.addEventListener("webglcontextlost", (e) => {
+          e.preventDefault();
+          updateStatus("WebGL context lost!");
+          isPlaying = false;
+          updateUI();
+        });
+
+        renderer.domElement.addEventListener("webglcontextrestored", () => {
+          updateStatus("WebGL restored - reload images");
+          // Reinitialize the particle system
+          createParticleSystem();
         });
 
         // Cleanup on page unload
@@ -1213,7 +1349,10 @@
         pauseCounter = 0;
         updateUI();
 
-        updateStatus("Processing...");
+        // Show loading state
+        const statusText = document.getElementById("status-text");
+        statusText.innerHTML = '<span class="spinner"></span>Processing...';
+        statusText.className = "status-loading";
 
         // Revoke old object URL if exists
         if (type === "A" && objectUrlA) {
@@ -1230,57 +1369,79 @@
           objectUrlB = objectUrl;
         }
 
+        // Update preview thumbnail
+        const preview = document.getElementById("preview" + type);
+        const filename = document.getElementById("filename" + type);
+        preview.src = objectUrl;
+        preview.classList.add("loaded");
+        filename.textContent = file.name;
+
         const img = new Image();
         img.onload = function () {
-          let w = img.width;
-          let h = img.height;
-          const maxDim = 1000;
-          if (w > maxDim || h > maxDim) {
-            const ratio = Math.min(maxDim / w, maxDim / h);
-            w *= ratio;
-            h *= ratio;
-          }
+          try {
+            let w = img.width;
+            let h = img.height;
+            const maxDim = 1000;
+            if (w > maxDim || h > maxDim) {
+              const ratio = Math.min(maxDim / w, maxDim / h);
+              w *= ratio;
+              h *= ratio;
+            }
 
-          processCanvas.width = w;
-          processCanvas.height = h;
-          processCtx.clearRect(0, 0, w, h);
-          processCtx.drawImage(img, 0, 0, w, h);
-          const data = processCtx.getImageData(0, 0, w, h);
-          const imgDataObj = { data: data.data, width: w, height: h };
+            processCanvas.width = w;
+            processCanvas.height = h;
+            processCtx.clearRect(0, 0, w, h);
+            processCtx.drawImage(img, 0, 0, w, h);
+            const data = processCtx.getImageData(0, 0, w, h);
+            const imgDataObj = { data: data.data, width: w, height: h };
 
-          const buffers = getImageBuffers(imgDataObj);
+            const buffers = getImageBuffers(imgDataObj);
 
-          if (type === "A") {
-            cachedPosA = buffers.positions;
-            cachedColA = buffers.colors;
+            if (type === "A") {
+              cachedPosA = buffers.positions;
+              cachedColA = buffers.colors;
 
-            particles.geometry.attributes.aStartPosition.array.set(
-              cachedPosA,
-            );
-            particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
-            particles.geometry.attributes.aColorStart.array.set(cachedColA);
-            particles.geometry.attributes.aColorEnd.array.set(cachedColA);
+              particles.geometry.attributes.aStartPosition.array.set(
+                cachedPosA,
+              );
+              particles.geometry.attributes.aEndPosition.array.set(cachedPosA);
+              particles.geometry.attributes.aColorStart.array.set(cachedColA);
+              particles.geometry.attributes.aColorEnd.array.set(cachedColA);
 
-            particles.geometry.attributes.aStartPosition.needsUpdate = true;
-            particles.geometry.attributes.aEndPosition.needsUpdate = true;
-            particles.geometry.attributes.aColorStart.needsUpdate = true;
-            particles.geometry.attributes.aColorEnd.needsUpdate = true;
+              particles.geometry.attributes.aStartPosition.needsUpdate = true;
+              particles.geometry.attributes.aEndPosition.needsUpdate = true;
+              particles.geometry.attributes.aColorStart.needsUpdate = true;
+              particles.geometry.attributes.aColorEnd.needsUpdate = true;
 
-            particles.material.uniforms.uProgress.value = 1.0;
+              particles.material.uniforms.uProgress.value = 1.0;
 
-            currentTarget = "B";
-            progress = 1.0;
+              currentTarget = "B";
+              progress = 1.0;
+            } else {
+              cachedPosB = buffers.positions;
+              cachedColB = buffers.colors;
+            }
 
-            updateStatus("Ready at Image A");
-          } else {
-            cachedPosB = buffers.positions;
-            cachedColB = buffers.colors;
-            updateStatus("Ready at Image A");
+            updateStatus("Ready" + (cachedPosA && cachedPosB ? " - Press Space" : ""));
+            statusText.className = "";
+          } catch (err) {
+            console.error("Image processing error:", err);
+            updateStatus("Error: " + err.message);
+            statusText.className = "status-error";
           }
 
           // Clean up Image object
           img.onload = null;
+          img.onerror = null;
         };
+
+        img.onerror = function () {
+          updateStatus("Error: Failed to load image");
+          statusText.className = "status-error";
+          img.onload = null;
+          img.onerror = null;
+        };
+
         img.src = objectUrl;
       }
 
@@ -1324,7 +1485,12 @@
       }
 
       function updateStatus(msg) {
-        document.getElementById("status-text").innerText = msg;
+        const statusText = document.getElementById("status-text");
+        statusText.innerText = msg;
+        // Clear any status classes (loading, error) when updating status
+        if (!msg.includes("Error") && !msg.includes("Processing")) {
+          statusText.className = "";
+        }
       }
 
       // Calculate luminance from hex color
@@ -1417,7 +1583,7 @@
 
         if (isPlaying) {
           if (progress < 1.0 + MAX_DELAY) {
-            progress += MORPH_SPEED;
+            progress += morphSpeed;
           } else {
             if (loopMode) {
               pauseCounter++;
