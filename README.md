@@ -11,10 +11,13 @@ A Three.js application that creates stunning particle morphing effects between m
 - **6 visual presets**: Default, Neon, Pastel, Ghost, Fire, Ice
 - **Adjustable speed** - control animation speed from 0.2x to 4.0x
 - **Particle customization** - size and Z-depth control
-- **Color effects** - hue shift, saturation, brightness controls
+- **Color effects** - hue shift, saturation, brightness, invert controls
 - **Staggered transitions** - particles move with randomized delays
 - **Color interpolation** - smooth or snap color transitions
 - **Grayscale mode** - toggle monochrome output
+- **Invert mode** - invert all colors for negative effect
+- **Auto-rotate** - continuously rotate particles around Y-axis
+- **Adjustable pause duration** - control time between morph transitions
 - **Loop mode** - continuous morphing through all images with pauses
 - **Mouse/touch interaction** - attract or repel particles
 - **Keyboard shortcuts** - Space to play/pause, Escape to toggle UI
@@ -60,6 +63,8 @@ The counter shows current position (e.g., "2 of 5").
 | Smooth Colors | Blend colors during transition |
 | Transition Effect | Choose morph animation style (see below) |
 | Grayscale | Convert output to monochrome |
+| Invert Colors | Invert all colors (negative effect) |
+| Auto Rotate | Continuously rotate particles around Y-axis |
 | Auto (for BG) | Auto-adjust settings based on background brightness |
 | Additive Blend | Glow effect (best for dark backgrounds) |
 
@@ -77,6 +82,8 @@ The counter shows current position (e.g., "2 of 5").
 | Control | Range | Description |
 |---------|-------|-------------|
 | Speed | 0.2-4.0x | Animation speed multiplier |
+| Pause Duration | 0-5s | Time between morph transitions in loop mode |
+| Rotate Speed | 0.01-2.0°/s | Rotation speed when Auto Rotate is enabled |
 | Image Scale | 10-100% | Scale of the particle image |
 | Canvas Width | 20-100% | Viewport width percentage |
 | Canvas Height | 20-100% | Viewport height percentage |

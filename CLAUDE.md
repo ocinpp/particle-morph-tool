@@ -25,7 +25,7 @@ particles-effects/
 **Particle System**
 - 100,000 particles via BufferGeometry
 - Attributes: position, aStartPosition, aEndPosition, aColorStart, aColorEnd, aRandomOffset
-- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale, uTransitionMode, uPointSize, uOpacity, uBrightness, uSaturation, uHueShift, uMouse, uMouseMode, uMouseRadius, uMouseStrength
+- Uniforms: uProgress, uTime, uSmoothColors, uGrayscale, uTransitionMode, uPointSize, uOpacity, uBrightness, uSaturation, uHueShift, uInvert, uMouse, uMouseMode, uMouseRadius, uMouseStrength
 
 **Vertex Shader**
 - Position interpolation with cubic easing
@@ -44,6 +44,7 @@ particles-effects/
 - Brightness multiplier
 - Saturation adjustment via grayscale luminance mix
 - Hue shift via RGB↔HSV conversion
+- Color inversion toggle
 
 ### Animation Flow
 
@@ -62,11 +63,14 @@ particles-effects/
 | `currentIndex` | Index of currently displayed image in the array |
 | `morphSpeed` | 0.012 (default) - progress increment per frame, adjustable via slider |
 | `MAX_DELAY` | 0.3 - max stagger delay (30% of progress) |
-| `PAUSE_DURATION` | 120 frames between morphs in loop mode |
+| `pauseDuration` | 120 (default) - frames between morphs in loop mode, adjustable via slider |
 | `imageScale` | 0.9 - scale factor for particle images |
 | `pointSize` | 3.0 (default) - particle point size |
 | `zDepth` | 2.0 (default) - Z-axis spread for particles |
 | `hueShift` | 0 (default) - hue rotation 0-1 (mapped from 0-360°) |
+| `invertColors` | false - invert all colors in fragment shader |
+| `autoRotate` | false - continuously rotate particles around Y-axis |
+| `rotateSpeed` | 0.5 (default) - rotation speed in degrees per second |
 | `autoMode` | false - auto-adjust settings based on background |
 | `transitionMode` | 0-3 - transition effect (default/spiral/explosion/gravity) |
 | `mouseMode` | 0-2 - mouse interaction (off/attract/repel) |
@@ -111,6 +115,9 @@ particles-effects/
 - Touch support: tap (attract), long press (repel)
 - Screenshot capture via canvas toDataURL
 - 6 visual presets with full parameter sets
+- Adjustable pause duration between morphs
+- Color inversion toggle
+- Auto-rotate mode with adjustable speed
 
 ## Potential Enhancements
 
