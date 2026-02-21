@@ -910,14 +910,14 @@
                 <span class="slider-label">Mouse Radius:</span>
                 <span class="slider-value" id="mouseRadiusValue">100</span>
               </div>
-              <input type="range" id="mouseRadiusSlider" min="20" max="300" value="100" />
+              <input type="range" id="mouseRadiusSlider" min="20" max="300" value="150" />
             </div>
             <div class="slider-container">
               <div class="slider-header">
                 <span class="slider-label">Mouse Strength:</span>
                 <span class="slider-value" id="mouseStrengthValue">30</span>
               </div>
-              <input type="range" id="mouseStrengthSlider" min="5" max="100" value="30" />
+              <input type="range" id="mouseStrengthSlider" min="10" max="500" value="300" />
             </div>
             <div class="touch-hint">Touch: tap to attract, long press to repel</div>
           </div>
@@ -1065,8 +1065,8 @@
       const mouseWorld = new THREE.Vector3();
       const mouseVector = new THREE.Vector3(); // Reusable vector to avoid allocation
       let mouseMode = 0; // 0=off, 1=attract, 2=repel
-      let mouseRadius = 100;
-      let mouseStrength = 1.0;
+      let mouseRadius = 150;
+      let mouseStrength = 3.0;
 
       // Performance optimization: tab visibility
       let isTabVisible = true;
@@ -1779,8 +1779,8 @@
             uInvert: { value: 0.0 },
             uMouse: { value: new THREE.Vector3() },
             uMouseMode: { value: 0.0 },
-            uMouseRadius: { value: 100.0 },
-            uMouseStrength: { value: 30.0 },
+            uMouseRadius: { value: 150.0 },
+            uMouseStrength: { value: 3.0 },
           },
           transparent: true,
           depthWrite: false,
@@ -2572,8 +2572,8 @@
         canvasWidthPercent = 100;
         canvasHeightPercent = 100;
         mouseMode = 0;
-        mouseRadius = 100;
-        mouseStrength = 1.0;
+        mouseRadius = 150;
+        mouseStrength = 3.0;
         autoMode = false;
         showFPS = false;
 
@@ -2612,10 +2612,10 @@
         document.getElementById("canvasHeightSlider").value = 100;
         document.getElementById("canvasHeightValue").textContent = "100%";
         document.getElementById("mouseModeSelect").value = 0;
-        document.getElementById("mouseRadiusSlider").value = 100;
-        document.getElementById("mouseRadiusValue").textContent = "100";
-        document.getElementById("mouseStrengthSlider").value = 100;
-        document.getElementById("mouseStrengthValue").textContent = "100%";
+        document.getElementById("mouseRadiusSlider").value = 150;
+        document.getElementById("mouseRadiusValue").textContent = "150";
+        document.getElementById("mouseStrengthSlider").value = 300;
+        document.getElementById("mouseStrengthValue").textContent = "300%";
         document.getElementById("autoToggle").checked = false;
         document.getElementById("autoIndicator").classList.remove("visible");
 
@@ -2631,8 +2631,8 @@
           particles.material.uniforms.uSaturation.value = 1.0;
           particles.material.uniforms.uHueShift.value = 0;
           particles.material.uniforms.uMouseMode.value = 0;
-          particles.material.uniforms.uMouseRadius.value = 100;
-          particles.material.uniforms.uMouseStrength.value = 1.0;
+          particles.material.uniforms.uMouseRadius.value = 150;
+          particles.material.uniforms.uMouseStrength.value = 3.0;
           particles.material.blending = THREE.AdditiveBlending;
           particles.rotation.y = 0;
         }
