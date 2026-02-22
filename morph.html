@@ -1186,6 +1186,23 @@
       // Performance optimization: conditional rendering
       let needsRender = true;
 
+      // Store event handler references for cleanup
+      let boundResizeHandler = null;
+      let boundMouseMoveHandler = null;
+      let boundVisibilityHandler = null;
+      let boundKeydownHandler = null;
+      let boundContextLostHandler = null;
+      let boundContextRestoredHandler = null;
+      let boundDragHandlers = [];
+      let boundTouchHandlers = [];
+
+      // Touch support timeouts for cleanup
+      let touchTimeout = null;
+      let attractTimeout = null;
+
+      // Reprocessing abort flag
+      let reprocessAbortController = null;
+
       // Debounced save for auto-save indicator
       let saveTimeout = null;
       function debouncedSave() {
@@ -1426,7 +1443,9 @@
         }
         updateCanvasSize();
 
-        window.addEventListener("resize", onWindowResize);
+        // Store bound handlers for cleanup
+        boundResizeHandler = onWindowResize;
+        window.addEventListener("resize", boundResizeHandler);
 
         // Multi-image handlers
         setupImageHandlers();
@@ -1822,7 +1841,7 @@
           });
 
         // Mouse move handler (throttled for performance)
-        document.addEventListener("mousemove", (e) => {
+        boundMouseMoveHandler = (e) => {
           const now = performance.now();
           if (now - lastMouseUpdate < MOUSE_THROTTLE) return;
           lastMouseUpdate = now;
@@ -1842,15 +1861,17 @@
             particles.material.uniforms.uMouse.value.copy(mouseWorld);
             needsRender = true;
           }
-        });
+        };
+        document.addEventListener("mousemove", boundMouseMoveHandler);
 
         // Tab visibility handler for performance
-        document.addEventListener("visibilitychange", () => {
+        boundVisibilityHandler = () => {
           isTabVisible = !document.hidden;
-        });
+        };
+        document.addEventListener("visibilitychange", boundVisibilityHandler);
 
         // Keyboard shortcuts
-        document.addEventListener("keydown", (e) => {
+        boundKeydownHandler = (e) => {
           // Allow ESC to work regardless of focus
           if (e.code === "Escape") {
             e.preventDefault();
@@ -1886,17 +1907,19 @@
               document.documentElement.requestFullscreen();
             }
           }
-        });
+        };
+        document.addEventListener("keydown", boundKeydownHandler);
 
         // WebGL context loss handling
-        renderer.domElement.addEventListener("webglcontextlost", (e) => {
+        boundContextLostHandler = (e) => {
           e.preventDefault();
           updateStatus("WebGL context lost!");
           isPlaying = false;
           updateUI();
-        });
+        };
+        renderer.domElement.addEventListener("webglcontextlost", boundContextLostHandler);
 
-        renderer.domElement.addEventListener("webglcontextrestored", () => {
+        boundContextRestoredHandler = () => {
           updateStatus("WebGL restored - reload images");
           // Dispose old particle system before creating new one
           if (particles) {
@@ -1907,7 +1930,8 @@
           }
           // Reinitialize the particle system
           createParticleSystem();
-        });
+        };
+        renderer.domElement.addEventListener("webglcontextrestored", boundContextRestoredHandler);
 
         // Cleanup on page unload
         window.addEventListener("beforeunload", () => {
@@ -1937,6 +1961,82 @@
         if (animationFrameId) {
           cancelAnimationFrame(animationFrameId);
           animationFrameId = null;
+        }
+
+        // Abort any ongoing image reprocessing
+        if (reprocessAbortController) {
+          reprocessAbortController.abort();
+          reprocessAbortController = null;
+        }
+
+        // Clear all pending timeouts
+        if (saveTimeout) { clearTimeout(saveTimeout); saveTimeout = null; }
+        if (touchTimeout) { clearTimeout(touchTimeout); touchTimeout = null; }
+        if (attractTimeout) { clearTimeout(attractTimeout); attractTimeout = null; }
+
+        // Remove window/document event listeners
+        if (boundResizeHandler) {
+          window.removeEventListener("resize", boundResizeHandler);
+          boundResizeHandler = null;
+        }
+        if (boundMouseMoveHandler) {
+          document.removeEventListener("mousemove", boundMouseMoveHandler);
+          boundMouseMoveHandler = null;
+        }
+        if (boundVisibilityHandler) {
+          document.removeEventListener("visibilitychange", boundVisibilityHandler);
+          boundVisibilityHandler = null;
+        }
+        if (boundKeydownHandler) {
+          document.removeEventListener("keydown", boundKeydownHandler);
+          boundKeydownHandler = null;
+        }
+
+        // Remove WebGL context handlers
+        if (renderer && renderer.domElement) {
+          if (boundContextLostHandler) {
+            renderer.domElement.removeEventListener("webglcontextlost", boundContextLostHandler);
+            boundContextLostHandler = null;
+          }
+          if (boundContextRestoredHandler) {
+            renderer.domElement.removeEventListener("webglcontextrestored", boundContextRestoredHandler);
+            boundContextRestoredHandler = null;
+          }
+        }
+
+        // Remove drag & drop listeners
+        const container = document.getElementById("canvas-container");
+        if (container && boundDragHandlers.length > 0) {
+          const dragEvents = ["dragenter", "dragover", "dragleave", "drop"];
+          // First 4 are prevention handlers (one per event)
+          dragEvents.forEach((event, i) => {
+            if (boundDragHandlers[i]) {
+              container.removeEventListener(event, boundDragHandlers[i]);
+            }
+          });
+          // Remaining handlers: dragEnter(4), dragLeave(5), drop(6)
+          if (boundDragHandlers[4]) container.removeEventListener("dragenter", boundDragHandlers[4]);
+          if (boundDragHandlers[5]) container.removeEventListener("dragleave", boundDragHandlers[5]);
+          if (boundDragHandlers[6]) container.removeEventListener("drop", boundDragHandlers[6]);
+          boundDragHandlers = [];
+        }
+
+        // Remove touch listeners
+        if (renderer && renderer.domElement && boundTouchHandlers.length > 0) {
+          const touchEvents = ["touchstart", "touchend", "touchmove"];
+          touchEvents.forEach((event, i) => {
+            if (boundTouchHandlers[i]) {
+              renderer.domElement.removeEventListener(event, boundTouchHandlers[i]);
+            }
+          });
+          boundTouchHandlers = [];
+        }
+
+        // Remove UI event listeners
+        const uiPanel = document.getElementById("ui");
+        if (uiPanel) {
+          uiPanel.removeEventListener("input", debouncedSave);
+          uiPanel.removeEventListener("change", debouncedSave);
         }
 
         // Revoke all object URLs and clear images array
@@ -2635,11 +2735,18 @@
       function reprocessImages() {
         if (images.length === 0) return;
 
+        // Abort any previous reprocessing
+        if (reprocessAbortController) {
+          reprocessAbortController.abort();
+        }
+        reprocessAbortController = new AbortController();
+        const signal = reprocessAbortController.signal;
+
         images.forEach((imgData, index) => {
           const img = new Image();
           img.onload = function() {
-            // Check if image still exists (could have been removed during load)
-            if (!images[index]) {
+            // Check if aborted or image removed
+            if (signal.aborted || !images[index]) {
               img.onload = null;
               img.onerror = null;
               return;
@@ -2660,12 +2767,15 @@
             const data = processCtx.getImageData(0, 0, w, h);
             const buffers = getImageBuffers({ data: data.data, width: w, height: h });
 
-            images[index].pos = buffers.positions;
-            images[index].col = buffers.colors;
+            // Check again before updating
+            if (!signal.aborted && images[index]) {
+              images[index].pos = buffers.positions;
+              images[index].col = buffers.colors;
 
-            // Update display if this is the current image and not playing
-            if (index === currentIndex && !isPlaying) {
-              displayImage(currentIndex);
+              // Update display if this is the current image and not playing
+              if (index === currentIndex && !isPlaying) {
+                displayImage(currentIndex);
+              }
             }
 
             img.onload = null;
@@ -2673,7 +2783,9 @@
           };
 
           img.onerror = function() {
-            console.warn("Failed to reprocess image:", imgData.name);
+            if (!signal.aborted) {
+              console.warn("Failed to reprocess image:", imgData.name);
+            }
             img.onload = null;
             img.onerror = null;
           };
@@ -2695,18 +2807,27 @@
         // Ensure we have a clean frame
         renderer.render(scene, camera);
 
-        const link = document.createElement("a");
-        const dataUrl = renderer.domElement.toDataURL("image/png");
-        link.download = "particle-morph-" + Date.now() + ".png";
-        link.href = dataUrl;
-        link.click();
+        // Use toBlob for better memory management
+        renderer.domElement.toBlob((blob) => {
+          if (!blob) {
+            updateStatus("Screenshot failed!");
+            return;
+          }
 
-        // Clean up to release memory
-        link.href = "";
-        link = null;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.download = "particle-morph-" + Date.now() + ".png";
+          link.href = url;
+          link.click();
 
-        updateStatus("Screenshot saved!");
-        setTimeout(() => updateStatus(isPlaying ? "Playing..." : "Ready"), 2000);
+          // Clean up - revoke object URL after download starts
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+          }, 100);
+
+          updateStatus("Screenshot saved!");
+          setTimeout(() => updateStatus(isPlaying ? "Playing..." : "Ready"), 2000);
+        }, "image/png");
       }
 
       // Preset configurations
@@ -3087,8 +3208,8 @@
           const tx = imageDB.transaction('images', 'readonly');
           const store = tx.objectStore('images');
           const request = store.openCursor();
-          const blobs = [];
-          const ids = [];
+          let blobs = [];
+          let ids = [];
 
           request.onsuccess = async (event) => {
             const cursor = event.target.result;
@@ -3131,15 +3252,26 @@
 
                 statusText.className = "";
                 updateStatus(images.length < 2 ? `Add ${2 - images.length} more image(s)` : "Ready - Press Space");
+                // Clear arrays after successful processing
+                blobs = null;
+                ids = null;
                 resolve();
               } catch (err) {
                 statusText.className = "status-error";
+                // Clear arrays on error to free memory
+                blobs = null;
+                ids = null;
                 reject(err);
               }
             }
           };
 
-          request.onerror = () => reject(request.error);
+          request.onerror = () => {
+            // Clear arrays on error
+            blobs = null;
+            ids = null;
+            reject(request.error);
+          };
         });
       }
 
@@ -3148,47 +3280,55 @@
         const overlay = document.getElementById("dropOverlay");
         const container = document.getElementById("canvas-container");
 
-        ["dragenter", "dragover", "dragleave", "drop"].forEach((event) => {
-          container.addEventListener(event, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          });
-        });
-
-        container.addEventListener("dragenter", () => {
+        // Create handlers for basic prevention
+        const preventHandler = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        const dragEnterHandler = () => {
           overlay.classList.add("visible");
-        });
-
-        container.addEventListener("dragleave", (e) => {
+        };
+        const dragLeaveHandler = (e) => {
           if (!container.contains(e.relatedTarget)) {
             overlay.classList.remove("visible");
           }
-        });
-
-        container.addEventListener("drop", (e) => {
+        };
+        const dropHandler = (e) => {
           overlay.classList.remove("visible");
           const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
           files.forEach(file => addImage(file));
+        };
+
+        // Store handlers for cleanup (4 prevention handlers + 3 custom)
+        const dragEvents = ["dragenter", "dragover", "dragleave", "drop"];
+        dragEvents.forEach((event) => {
+          container.addEventListener(event, preventHandler);
         });
+        boundDragHandlers = [preventHandler, preventHandler, preventHandler, preventHandler];
+
+        container.addEventListener("dragenter", dragEnterHandler);
+        container.addEventListener("dragleave", dragLeaveHandler);
+        container.addEventListener("drop", dropHandler);
+
+        // Also store the custom handlers (we'll need to track these for cleanup)
+        boundDragHandlers.push(dragEnterHandler, dragLeaveHandler, dropHandler);
       }
 
       // Touch Support
       function setupTouchSupport() {
         let touchStartTime = 0;
-        let touchTimeout = null;
-        let attractTimeout = null;  // Track attract mode timeout
         const LONG_PRESS_DURATION = 500;
 
-        renderer.domElement.addEventListener("touchstart", (e) => {
+        const touchStartHandler = (e) => {
           touchStartTime = Date.now();
           touchTimeout = setTimeout(() => {
             // Long press = repel mode
             mouseMode = 2;
             if (particles) particles.material.uniforms.uMouseMode.value = 2;
           }, LONG_PRESS_DURATION);
-        }, { passive: true });
+        };
 
-        renderer.domElement.addEventListener("touchend", () => {
+        const touchEndHandler = () => {
           clearTimeout(touchTimeout);
           const duration = Date.now() - touchStartTime;
 
@@ -3208,9 +3348,9 @@
             mouseMode = 0;
             if (particles) particles.material.uniforms.uMouseMode.value = 0;
           }
-        }, { passive: true });
+        };
 
-        renderer.domElement.addEventListener("touchmove", (e) => {
+        const touchMoveHandler = (e) => {
           if (e.touches.length > 0) {
             const touch = e.touches[0];
             const rect = renderer.domElement.getBoundingClientRect();
@@ -3229,7 +3369,14 @@
               needsRender = true;
             }
           }
-        }, { passive: true });
+        };
+
+        // Store handlers for cleanup
+        boundTouchHandlers = [touchStartHandler, touchEndHandler, touchMoveHandler];
+
+        renderer.domElement.addEventListener("touchstart", touchStartHandler, { passive: true });
+        renderer.domElement.addEventListener("touchend", touchEndHandler, { passive: true });
+        renderer.domElement.addEventListener("touchmove", touchMoveHandler, { passive: true });
       }
 
       init();
