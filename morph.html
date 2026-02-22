@@ -148,6 +148,16 @@
         color: #f50;
       }
 
+      .save-indicator {
+        color: #0f0;
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .save-indicator.flash {
+        opacity: 1;
+      }
+
       .input-group {
         margin-bottom: 8px;
       }
@@ -624,6 +634,16 @@
         background: rgba(0, 170, 255, 0.1);
       }
 
+      .image-item.dragging {
+        opacity: 0.5;
+        border-style: dashed;
+      }
+
+      .image-item.drag-over {
+        border-color: #0f0;
+        background: rgba(0, 255, 0, 0.1);
+      }
+
       .image-item .number {
         width: 20px;
         height: 20px;
@@ -731,7 +751,8 @@
       <!-- HEADER WITH COLLAPSE BUTTON -->
       <div class="header-container">
         <h2>Particle Morph Tool</h2>
-        <div style="display: flex; gap: 6px;">
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <span id="saveIndicator" class="save-indicator" title="Settings saved">✓</span>
           <button class="reset-btn" id="resetBtn" title="Reset Settings">↺</button>
           <button class="collapse-btn" id="collapseBtn" title="Hide Controls">−</button>
         </div>
@@ -2033,7 +2054,7 @@
         const counter = document.getElementById("imageCounter");
 
         list.innerHTML = images.map((img, i) => `
-          <div class="image-item ${i === currentIndex ? 'active' : ''}" data-index="${i}">
+          <div class="image-item ${i === currentIndex ? 'active' : ''}" data-index="${i}" draggable="true">
             <span class="number">${i + 1}</span>
             <img class="preview" src="${img.url}" alt="Preview ${i + 1}" />
             <span class="name">${img.name}</span>
@@ -2048,8 +2069,9 @@
           counter.innerHTML = `<span class="current">${currentIndex + 1}</span> of ${images.length}`;
         }
 
-        // Add click handlers
+        // Add click and drag handlers
         list.querySelectorAll(".image-item").forEach(item => {
+          // Click handler
           item.addEventListener("click", (e) => {
             if (e.target.classList.contains("remove-btn")) return;
             const index = parseInt(item.dataset.index);
@@ -2057,6 +2079,67 @@
               currentIndex = index;
               displayImage(index);
               updateImageList();
+            }
+          });
+
+          // Drag handlers for reordering
+          item.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", item.dataset.index);
+            item.classList.add("dragging");
+          });
+
+          item.addEventListener("dragend", () => {
+            item.classList.remove("dragging");
+            list.querySelectorAll(".image-item").forEach(i => i.classList.remove("drag-over"));
+          });
+
+          item.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            item.classList.add("drag-over");
+          });
+
+          item.addEventListener("dragleave", () => {
+            item.classList.remove("drag-over");
+          });
+
+          item.addEventListener("drop", async (e) => {
+            e.preventDefault();
+            item.classList.remove("drag-over");
+
+            const fromIndex = parseInt(e.dataTransfer.getData("text/plain"));
+            const toIndex = parseInt(item.dataset.index);
+
+            if (fromIndex !== toIndex) {
+              // Reorder images array
+              const [moved] = images.splice(fromIndex, 1);
+              images.splice(toIndex, 0, moved);
+
+              // Update currentIndex if needed
+              if (currentIndex === fromIndex) {
+                currentIndex = toIndex;
+              } else if (fromIndex < currentIndex && toIndex >= currentIndex) {
+                currentIndex--;
+              } else if (fromIndex > currentIndex && toIndex <= currentIndex) {
+                currentIndex++;
+              }
+
+              // Rebuild IndexedDB with new order
+              if (imageDB) {
+                try {
+                  await clearImageDB();
+                  for (let i = 0; i < images.length; i++) {
+                    // Fetch the blob from the object URL and save
+                    const response = await fetch(images[i].url);
+                    const blob = await response.blob();
+                    await saveImageToDB(blob, images[i].id);
+                  }
+                } catch (err) {
+                  console.warn("Failed to update image DB after reorder:", err);
+                }
+              }
+
+              updateImageList();
+              needsRender = true;
             }
           });
         });
@@ -2470,6 +2553,11 @@
           showFPS
         };
         localStorage.setItem("particleMorphSettings", JSON.stringify(settings));
+
+        // Flash the save indicator
+        const indicator = document.getElementById("saveIndicator");
+        indicator.classList.add("flash");
+        setTimeout(() => indicator.classList.remove("flash"), 1000);
       }
 
       function loadSettings() {

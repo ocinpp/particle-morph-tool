@@ -49,7 +49,7 @@ A Three.js application that creates stunning particle morphing effects between m
 | Add image | Click "+ Add Image" button or drag & drop onto canvas |
 | Remove image | Click the × button on any image |
 | View image | Click on an image in the list |
-| Reorder | (Coming soon) Drag images to reorder |
+| Reorder | Drag an image to a new position in the list |
 
 The counter shows current position (e.g., "2 of 5").
 
@@ -125,7 +125,7 @@ On touch devices:
 ### Performance
 
 - **FPS Counter** - Toggle in Animation section to show frame rate
-- **Settings Persistence** - All settings and images auto-save and restore on next visit
+- **Settings Persistence** - All settings and images auto-save and restore on next visit (✓ flashes when saved)
 - **Reset Button** - Click ↺ in header to reset all settings to defaults (with confirmation)
 
 ### Auto BG Mode
