@@ -830,6 +830,17 @@
                 <option value="3">Reverse Gravity</option>
               </select>
             </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Easing Curve:</span>
+              <select id="easingModeSelect" style="background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 3px 6px; font-size: 11px;">
+                <option value="0">Ease In-Out</option>
+                <option value="1">Linear</option>
+                <option value="2">Ease In</option>
+                <option value="3">Ease Out</option>
+                <option value="4">Bounce</option>
+                <option value="5">Elastic</option>
+              </select>
+            </div>
             <div class="slider-container">
               <div class="slider-header">
                 <span class="slider-label">Speed:</span>
@@ -1081,6 +1092,7 @@
       let autoMode = false;
       let progress = 0;
       let transitionMode = 0; // 0=default, 1=spiral, 2=explosion, 3=gravity
+      let easingMode = 0; // 0=ease-in-out, 1=linear, 2=ease-in, 3=ease-out, 4=bounce, 5=elastic
 
       let imageScale = 0.9;
       let canvasWidthPercent = 100;
@@ -1159,6 +1171,7 @@
             uniform float uSmoothColors;
             uniform float uGrayscale;
             uniform float uTransitionMode;
+            uniform float uEasingMode;
             uniform float uPointSize;
             uniform vec3 uMouse;
             uniform float uMouseMode;
@@ -1176,8 +1189,39 @@
                 float p_raw = uProgress - delay;
                 float p = clamp(p_raw, 0.0, 1.0);
 
-                // Cubic easing
-                float pEased = p < 0.5 ? 4.0 * p * p * p : 1.0 - pow(-2.0 * p + 2.0, 3.0) / 2.0;
+                // Easing functions based on mode
+                float pEased;
+                if (uEasingMode < 0.5) {
+                    // Ease In-Out (cubic) - default
+                    pEased = p < 0.5 ? 4.0 * p * p * p : 1.0 - pow(-2.0 * p + 2.0, 3.0) / 2.0;
+                } else if (uEasingMode < 1.5) {
+                    // Linear
+                    pEased = p;
+                } else if (uEasingMode < 2.5) {
+                    // Ease In (cubic)
+                    pEased = p * p * p;
+                } else if (uEasingMode < 3.5) {
+                    // Ease Out (cubic)
+                    pEased = 1.0 - pow(1.0 - p, 3.0);
+                } else if (uEasingMode < 4.5) {
+                    // Bounce
+                    float n1 = 7.5625;
+                    float d1 = 2.75;
+                    if (p < 1.0 / d1) {
+                        pEased = n1 * p * p;
+                    } else if (p < 2.0 / d1) {
+                        pEased = n1 * (p -= 1.5 / d1) * p + 0.75;
+                    } else if (p < 2.5 / d1) {
+                        pEased = n1 * (p -= 2.25 / d1) * p + 0.9375;
+                    } else {
+                        pEased = n1 * (p -= 2.625 / d1) * p + 0.984375;
+                    }
+                } else {
+                    // Elastic
+                    float c4 = (2.0 * 3.14159) / 3.0;
+                    pEased = p == 0.0 ? 0.0 : p == 1.0 ? 1.0
+                        : pow(2.0, 10.0 * p - 10.0) * sin((p * 10.0 - 10.75) * c4);
+                }
 
                 vec3 pos = mix(aStartPosition, aEndPosition, pEased);
 
@@ -1327,6 +1371,7 @@
           particles.material.uniforms.uInvert.value = invertColors ? 1.0 : 0.0;
           particles.material.uniforms.uSmoothColors.value = smoothColors ? 1.0 : 0.0;
           particles.material.uniforms.uTransitionMode.value = transitionMode;
+          particles.material.uniforms.uEasingMode.value = easingMode;
           particles.material.uniforms.uPointSize.value = pointSize;
           particles.material.uniforms.uOpacity.value = opacity / 100;
           particles.material.uniforms.uBrightness.value = brightness / 100;
@@ -1376,6 +1421,16 @@
             transitionMode = parseInt(e.target.value);
             if (particles) {
               particles.material.uniforms.uTransitionMode.value = transitionMode;
+            }
+          });
+
+        // Easing Mode Select
+        document
+          .getElementById("easingModeSelect")
+          .addEventListener("change", (e) => {
+            easingMode = parseInt(e.target.value);
+            if (particles) {
+              particles.material.uniforms.uEasingMode.value = easingMode;
             }
           });
 
@@ -1875,6 +1930,7 @@
             uSmoothColors: { value: 1.0 },
             uGrayscale: { value: 0.0 },
             uTransitionMode: { value: 0.0 },
+            uEasingMode: { value: 0.0 },
             uPointSize: { value: 3.0 },
             uOpacity: { value: 1.0 },
             uBrightness: { value: 1.0 },
@@ -2612,6 +2668,7 @@
           loopMode,
           smoothColors,
           transitionMode,
+          easingMode,
           morphSpeed,
           pauseDuration,
           autoRotate,
@@ -2653,6 +2710,7 @@
           if (settings.loopMode !== undefined) loopMode = settings.loopMode;
           if (settings.smoothColors !== undefined) smoothColors = settings.smoothColors;
           if (settings.transitionMode !== undefined) transitionMode = settings.transitionMode;
+          if (settings.easingMode !== undefined) easingMode = settings.easingMode;
           if (settings.morphSpeed !== undefined) morphSpeed = settings.morphSpeed;
           if (settings.pauseDuration !== undefined) pauseDuration = settings.pauseDuration;
           if (settings.autoRotate !== undefined) autoRotate = settings.autoRotate;
@@ -2679,6 +2737,7 @@
           document.getElementById("loopToggle").checked = loopMode;
           document.getElementById("colorToggle").checked = smoothColors;
           document.getElementById("transitionModeSelect").value = transitionMode;
+          document.getElementById("easingModeSelect").value = easingMode;
           document.getElementById("speedSlider").value = morphSpeed * 1000;
           document.getElementById("speedValue").textContent = (morphSpeed / 0.012).toFixed(1) + "x";
           document.getElementById("pauseSlider").value = pauseDuration;
@@ -2726,6 +2785,7 @@
         loopMode = true;
         smoothColors = true;
         transitionMode = 0;
+        easingMode = 0;
         morphSpeed = 0.012;
         pauseDuration = 120;
         autoRotate = false;
@@ -2752,6 +2812,7 @@
         document.getElementById("loopToggle").checked = loopMode;
         document.getElementById("colorToggle").checked = smoothColors;
         document.getElementById("transitionModeSelect").value = transitionMode;
+        document.getElementById("easingModeSelect").value = easingMode;
         document.getElementById("speedSlider").value = 12;
         document.getElementById("speedValue").textContent = "1.0x";
         document.getElementById("pauseSlider").value = 120;
@@ -2796,6 +2857,7 @@
           particles.material.uniforms.uInvert.value = 0.0;
           particles.material.uniforms.uSmoothColors.value = 1.0;
           particles.material.uniforms.uTransitionMode.value = 0;
+          particles.material.uniforms.uEasingMode.value = 0;
           particles.material.uniforms.uPointSize.value = 3.0;
           particles.material.uniforms.uOpacity.value = 1.0;
           particles.material.uniforms.uBrightness.value = 1.0;
