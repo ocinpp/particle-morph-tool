@@ -1210,11 +1210,14 @@
                     if (p < 1.0 / d1) {
                         pEased = n1 * p * p;
                     } else if (p < 2.0 / d1) {
-                        pEased = n1 * (p -= 1.5 / d1) * p + 0.75;
+                        float t = p - 1.5 / d1;
+                        pEased = n1 * t * t + 0.75;
                     } else if (p < 2.5 / d1) {
-                        pEased = n1 * (p -= 2.25 / d1) * p + 0.9375;
+                        float t = p - 2.25 / d1;
+                        pEased = n1 * t * t + 0.9375;
                     } else {
-                        pEased = n1 * (p -= 2.625 / d1) * p + 0.984375;
+                        float t = p - 2.625 / d1;
+                        pEased = n1 * t * t + 0.984375;
                     }
                 } else {
                     // Elastic
