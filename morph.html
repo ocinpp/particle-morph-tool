@@ -1004,7 +1004,7 @@
               <button class="preset-btn active" data-width="100" data-height="100">Full</button>
               <button class="preset-btn" data-width="100" data-height="56">16:9</button>
               <button class="preset-btn" data-width="56" data-height="100">9:16</button>
-              <button class="preset-btn" data-width="100" data-height="100" data-square="true">1:1</button>
+              <button class="preset-btn" data-width="100" data-height="100">1:1</button>
               <button class="preset-btn" data-width="100" data-height="75">4:3</button>
             </div>
             <div class="toggle-container">
@@ -1487,28 +1487,13 @@
           document.querySelectorAll(".preset-btn").forEach(btn => {
             const w = parseInt(btn.dataset.width);
             const h = parseInt(btn.dataset.height);
-            const isSquare = btn.dataset.square === "true";
-
-            if (isSquare) {
-              // Square: both dimensions should be equal (use the smaller)
-              const isActive = canvasWidthPercent === canvasHeightPercent;
-              btn.classList.toggle("active", isActive);
-            } else {
-              btn.classList.toggle("active", canvasWidthPercent == w && canvasHeightPercent == h);
-            }
+            btn.classList.toggle("active", canvasWidthPercent == w && canvasHeightPercent == h);
           });
         }
 
-        function applyCanvasPreset(width, height, isSquare = false) {
-          if (isSquare) {
-            // For square, use the smaller dimension
-            const size = Math.min(100, Math.min(window.innerWidth, window.innerHeight) / Math.max(window.innerWidth, window.innerHeight) * 100);
-            canvasWidthPercent = Math.round(size);
-            canvasHeightPercent = Math.round(size);
-          } else {
-            canvasWidthPercent = width;
-            canvasHeightPercent = height;
-          }
+        function applyCanvasPreset(width, height) {
+          canvasWidthPercent = width;
+          canvasHeightPercent = height;
 
           document.getElementById("widthSlider").value = canvasWidthPercent;
           document.getElementById("widthValue").textContent = canvasWidthPercent + "%";
@@ -1522,8 +1507,7 @@
           btn.addEventListener("click", () => {
             const w = parseInt(btn.dataset.width);
             const h = parseInt(btn.dataset.height);
-            const isSquare = btn.dataset.square === "true";
-            applyCanvasPreset(w, h, isSquare);
+            applyCanvasPreset(w, h);
           });
         });
 
