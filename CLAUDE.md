@@ -73,6 +73,7 @@ particles-effects/
 | `rotateSpeed` | 0.5 (default) - rotation speed in degrees per second |
 | `autoMode` | false - auto-adjust settings based on background |
 | `transitionMode` | 0-3 - transition effect (default/spiral/explosion/gravity) |
+| `easingMode` | 0-5 - easing curve (ease-in-out/linear/ease-in/ease-out/bounce/elastic) |
 | `mouseMode` | 0-2 - mouse interaction (off/attract/repel) |
 | `mouseRadius` | 150 (default) - radius of mouse interaction effect |
 | `mouseStrength` | 3.0 (default) - strength of mouse interaction |

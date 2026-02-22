@@ -62,6 +62,7 @@ The counter shows current position (e.g., "2 of 5").
 | Loop Mode | Continuously morph between images |
 | Smooth Colors | Blend colors during transition |
 | Transition Effect | Choose morph animation style (see below) |
+| Easing Curve | Choose animation timing curve (see below) |
 | Grayscale | Convert output to monochrome |
 | Invert Colors | Invert all colors (negative effect) |
 | Auto Rotate | Continuously rotate particles around Y-axis |
@@ -77,6 +78,17 @@ The counter shows current position (e.g., "2 of 5").
 | Spiral Vortex | Particles spin around center axis with Z-wave |
 | Explosion | Particles burst outward then reform |
 | Reverse Gravity | Particles float upward like fireworks |
+
+### Easing Curves
+
+| Easing | Feel | Use Case |
+|--------|------|----------|
+| Ease In-Out | Smooth start and end | Natural motion (default) |
+| Linear | Constant speed | Mechanical, robotic |
+| Ease In | Slow start, fast end | Accelerating |
+| Ease Out | Fast start, slow end | Decelerating |
+| Bounce | Bounces at end | Playful, elastic |
+| Elastic | Overshoots and settles | Springy, rubbery |
 
 ### Sliders
 
