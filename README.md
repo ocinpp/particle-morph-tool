@@ -97,7 +97,19 @@ The counter shows current position (e.g., "2 of 5").
 | Mouse Radius | 20-300 | Radius of mouse interaction effect |
 | Mouse Strength | 10-500% | Strength of mouse attraction/repulsion |
 
-### Presets
+### Canvas Presets
+
+Quick buttons to set common aspect ratios:
+
+| Preset | Size | Use Case |
+|--------|------|----------|
+| Full | 100×100% | Fill entire viewport |
+| 16:9 | 100×56% | Widescreen video |
+| 9:16 | 56×100% | Portrait/mobile |
+| 1:1 | 100×100% | Square (social media) |
+| 4:3 | 100×75% | Traditional TV |
+
+### Visual Presets
 
 | Preset | Description |
 |--------|-------------|
