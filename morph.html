@@ -862,12 +862,44 @@
                 <span class="slider"></span>
               </label>
             </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Rotate Mode:</span>
+              <select id="rotateModeSelect" style="background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 3px 6px; font-size: 11px;">
+                <option value="0">Continuous</option>
+                <option value="1">Oscillate</option>
+                <option value="2">Morph Only</option>
+              </select>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Rotate Axis:</span>
+              <select id="rotateAxisSelect" style="background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 3px 6px; font-size: 11px;">
+                <option value="y">Y (Horizontal)</option>
+                <option value="x">X (Vertical)</option>
+                <option value="z">Z (Roll)</option>
+                <option value="xy">XY (Diagonal)</option>
+                <option value="xyz">XYZ (Tumble)</option>
+              </select>
+            </div>
             <div class="slider-container">
               <div class="slider-header">
                 <span class="slider-label">Rotate Speed:</span>
                 <span class="slider-value" id="rotateSpeedValue">0.5°/s</span>
               </div>
               <input type="range" id="rotateSpeedSlider" min="1" max="200" value="50" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Rotate Range:</span>
+                <span class="slider-value" id="rotateRangeValue">±180°</span>
+              </div>
+              <input type="range" id="rotateRangeSlider" min="15" max="180" value="180" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Pivot Offset:</span>
+                <span class="slider-value" id="rotatePivotValue">0%</span>
+              </div>
+              <input type="range" id="rotatePivotSlider" min="0" max="100" value="0" />
             </div>
             <div class="toggle-container">
               <span class="toggle-label">Show FPS:</span>
@@ -1123,7 +1155,12 @@
 
       // Auto-rotate settings
       let autoRotate = false;
+      let rotateMode = 0; // 0=continuous, 1=oscillate, 2=morph-only
+      let rotateAxis = 'y'; // 'x', 'y', 'z', 'xy', 'xyz'
       let rotateSpeed = 0.5;  // Degrees per frame at base speed
+      let rotateRange = 180; // Max rotation angle in degrees (for oscillate mode)
+      let rotatePivot = 0; // 0=center, 100=max offset
+      let rotationTime = 0; // Track time for oscillation
 
       // FPS counter
       let showFPS = false;
@@ -1460,8 +1497,34 @@
           .addEventListener("change", (e) => {
             autoRotate = e.target.checked;
             if (!autoRotate && particles) {
-              // Reset rotation when disabled
-              particles.rotation.y = 0;
+              // Reset all rotation when disabled
+              particles.rotation.set(0, 0, 0);
+              particles.position.x = 0;
+              particles.position.y = 0;
+              rotationTime = 0;
+              needsRender = true;
+            }
+          });
+
+        // Rotate Mode Select
+        document
+          .getElementById("rotateModeSelect")
+          .addEventListener("change", (e) => {
+            rotateMode = parseInt(e.target.value);
+            if (particles) {
+              particles.rotation.set(0, 0, 0);
+              rotationTime = 0;
+              needsRender = true;
+            }
+          });
+
+        // Rotate Axis Select
+        document
+          .getElementById("rotateAxisSelect")
+          .addEventListener("change", (e) => {
+            rotateAxis = e.target.value;
+            if (particles) {
+              particles.rotation.set(0, 0, 0);
               needsRender = true;
             }
           });
@@ -1472,6 +1535,27 @@
           .addEventListener("input", (e) => {
             rotateSpeed = e.target.value / 100;
             document.getElementById("rotateSpeedValue").textContent = rotateSpeed.toFixed(1) + "°/s";
+          });
+
+        // Rotate Range Slider
+        document
+          .getElementById("rotateRangeSlider")
+          .addEventListener("input", (e) => {
+            rotateRange = parseInt(e.target.value);
+            document.getElementById("rotateRangeValue").textContent = "±" + rotateRange + "°";
+          });
+
+        // Rotate Pivot Slider
+        document
+          .getElementById("rotatePivotSlider")
+          .addEventListener("input", (e) => {
+            rotatePivot = parseInt(e.target.value);
+            document.getElementById("rotatePivotValue").textContent = rotatePivot + "%";
+            if (rotatePivot === 0 && particles) {
+              particles.position.x = 0;
+              particles.position.y = 0;
+              needsRender = true;
+            }
           });
 
         // FPS Toggle
@@ -2487,8 +2571,42 @@
 
         // Auto-rotate particles
         if (autoRotate && particles) {
-          particles.rotation.y += rotateSpeed * 0.01 * (morphSpeed / 0.012);
-          needsRender = true;
+          const speedFactor = rotateSpeed * 0.01 * (morphSpeed / 0.012);
+          const shouldRotate = rotateMode === 2 ? isPlaying : true; // Morph-only mode
+
+          if (shouldRotate) {
+            // Handle pivot offset
+            if (rotatePivot > 0) {
+              const offset = rotatePivot * 2; // Scale to reasonable range
+              particles.position.x = offset * Math.sin(rotationTime * speedFactor);
+              particles.position.y = offset * Math.cos(rotationTime * speedFactor);
+            }
+
+            if (rotateMode === 1) {
+              // Oscillate mode - use sine wave for back-and-forth
+              rotationTime += 0.05;
+              const oscillation = Math.sin(rotationTime * rotateSpeed * 0.02) * (rotateRange * Math.PI / 180);
+
+              // Apply to selected axes
+              particles.rotation.x = (rotateAxis.includes('x')) ? oscillation : 0;
+              particles.rotation.y = (rotateAxis.includes('y')) ? oscillation : 0;
+              particles.rotation.z = (rotateAxis.includes('z')) ? oscillation : 0;
+            } else {
+              // Continuous or Morph-only mode
+              const deltaRotation = speedFactor;
+
+              // Reset non-selected axes
+              if (!rotateAxis.includes('x')) particles.rotation.x = 0;
+              if (!rotateAxis.includes('y')) particles.rotation.y = 0;
+              if (!rotateAxis.includes('z')) particles.rotation.z = 0;
+
+              // Apply to selected axes
+              if (rotateAxis.includes('x')) particles.rotation.x += deltaRotation;
+              if (rotateAxis.includes('y')) particles.rotation.y += deltaRotation;
+              if (rotateAxis.includes('z')) particles.rotation.z += deltaRotation;
+            }
+            needsRender = true;
+          }
         }
 
         // Only render if something changed
@@ -2675,7 +2793,11 @@
           morphSpeed,
           pauseDuration,
           autoRotate,
+          rotateMode,
+          rotateAxis,
           rotateSpeed,
+          rotateRange,
+          rotatePivot,
           useGrayscale,
           invertColors,
           additiveBlend,
@@ -2717,7 +2839,11 @@
           if (settings.morphSpeed !== undefined) morphSpeed = settings.morphSpeed;
           if (settings.pauseDuration !== undefined) pauseDuration = settings.pauseDuration;
           if (settings.autoRotate !== undefined) autoRotate = settings.autoRotate;
+          if (settings.rotateMode !== undefined) rotateMode = settings.rotateMode;
+          if (settings.rotateAxis !== undefined) rotateAxis = settings.rotateAxis;
           if (settings.rotateSpeed !== undefined) rotateSpeed = settings.rotateSpeed;
+          if (settings.rotateRange !== undefined) rotateRange = settings.rotateRange;
+          if (settings.rotatePivot !== undefined) rotatePivot = settings.rotatePivot;
           if (settings.useGrayscale !== undefined) useGrayscale = settings.useGrayscale;
           if (settings.invertColors !== undefined) invertColors = settings.invertColors;
           if (settings.additiveBlend !== undefined) additiveBlend = settings.additiveBlend;
@@ -2746,8 +2872,14 @@
           document.getElementById("pauseSlider").value = pauseDuration;
           document.getElementById("pauseValue").textContent = (pauseDuration / 60).toFixed(1) + "s";
           document.getElementById("rotateToggle").checked = autoRotate;
+          document.getElementById("rotateModeSelect").value = rotateMode;
+          document.getElementById("rotateAxisSelect").value = rotateAxis;
           document.getElementById("rotateSpeedSlider").value = rotateSpeed * 100;
           document.getElementById("rotateSpeedValue").textContent = rotateSpeed.toFixed(1) + "°/s";
+          document.getElementById("rotateRangeSlider").value = rotateRange;
+          document.getElementById("rotateRangeValue").textContent = "±" + rotateRange + "°";
+          document.getElementById("rotatePivotSlider").value = rotatePivot;
+          document.getElementById("rotatePivotValue").textContent = rotatePivot + "%";
           document.getElementById("grayToggle").checked = useGrayscale;
           document.getElementById("invertToggle").checked = invertColors;
           document.getElementById("blendToggle").checked = additiveBlend;
@@ -2792,7 +2924,11 @@
         morphSpeed = 0.012;
         pauseDuration = 120;
         autoRotate = false;
+        rotateMode = 0;
+        rotateAxis = 'y';
         rotateSpeed = 0.5;
+        rotateRange = 180;
+        rotatePivot = 0;
         useGrayscale = false;
         invertColors = false;
         additiveBlend = true;
@@ -2821,8 +2957,14 @@
         document.getElementById("pauseSlider").value = 120;
         document.getElementById("pauseValue").textContent = "2.0s";
         document.getElementById("rotateToggle").checked = autoRotate;
+        document.getElementById("rotateModeSelect").value = rotateMode;
+        document.getElementById("rotateAxisSelect").value = rotateAxis;
         document.getElementById("rotateSpeedSlider").value = 50;
         document.getElementById("rotateSpeedValue").textContent = "0.5°/s";
+        document.getElementById("rotateRangeSlider").value = 180;
+        document.getElementById("rotateRangeValue").textContent = "±180°";
+        document.getElementById("rotatePivotSlider").value = 0;
+        document.getElementById("rotatePivotValue").textContent = "0%";
         document.getElementById("fpsToggle").checked = showFPS;
         document.getElementById("fpsCounter").classList.remove("visible");
         document.getElementById("grayToggle").checked = useGrayscale;
@@ -2870,7 +3012,9 @@
           particles.material.uniforms.uMouseRadius.value = 150;
           particles.material.uniforms.uMouseStrength.value = 3.0;
           particles.material.blending = THREE.AdditiveBlending;
-          particles.rotation.y = 0;
+          particles.rotation.set(0, 0, 0);
+          particles.position.x = 0;
+          particles.position.y = 0;
         }
 
         updateCanvasSize();
