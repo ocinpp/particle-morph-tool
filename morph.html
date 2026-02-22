@@ -720,6 +720,36 @@
         border-style: solid;
       }
 
+      .preset-buttons {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .preset-btn {
+        padding: 4px 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        color: #888;
+        cursor: pointer;
+        font-size: 10px;
+        transition: all 0.2s;
+      }
+
+      .preset-btn:hover {
+        background: rgba(0, 170, 255, 0.15);
+        border-color: rgba(0, 170, 255, 0.4);
+        color: #0af;
+      }
+
+      .preset-btn.active {
+        background: rgba(0, 170, 255, 0.2);
+        border-color: #0af;
+        color: #0af;
+      }
+
       .image-counter {
         font-size: 10px;
         color: #888;
@@ -969,6 +999,13 @@
                 <span class="slider-value" id="heightValue">100%</span>
               </div>
               <input type="range" id="heightSlider" min="20" max="100" value="100" />
+            </div>
+            <div class="preset-buttons">
+              <button class="preset-btn active" data-width="100" data-height="100">Full</button>
+              <button class="preset-btn" data-width="100" data-height="56">16:9</button>
+              <button class="preset-btn" data-width="56" data-height="100">9:16</button>
+              <button class="preset-btn" data-width="100" data-height="100" data-square="true">1:1</button>
+              <button class="preset-btn" data-width="100" data-height="75">4:3</button>
             </div>
             <div class="toggle-container">
               <span class="toggle-label">Background:</span>
@@ -1433,6 +1470,7 @@
             canvasWidthPercent = e.target.value;
             document.getElementById("widthValue").textContent = e.target.value + "%";
             updateCanvasSize();
+            updatePresetButtons();
           });
 
         document
@@ -1441,7 +1479,53 @@
             canvasHeightPercent = e.target.value;
             document.getElementById("heightValue").textContent = e.target.value + "%";
             updateCanvasSize();
+            updatePresetButtons();
           });
+
+        // Canvas size presets
+        function updatePresetButtons() {
+          document.querySelectorAll(".preset-btn").forEach(btn => {
+            const w = parseInt(btn.dataset.width);
+            const h = parseInt(btn.dataset.height);
+            const isSquare = btn.dataset.square === "true";
+
+            if (isSquare) {
+              // Square: both dimensions should be equal (use the smaller)
+              const isActive = canvasWidthPercent === canvasHeightPercent;
+              btn.classList.toggle("active", isActive);
+            } else {
+              btn.classList.toggle("active", canvasWidthPercent == w && canvasHeightPercent == h);
+            }
+          });
+        }
+
+        function applyCanvasPreset(width, height, isSquare = false) {
+          if (isSquare) {
+            // For square, use the smaller dimension
+            const size = Math.min(100, Math.min(window.innerWidth, window.innerHeight) / Math.max(window.innerWidth, window.innerHeight) * 100);
+            canvasWidthPercent = Math.round(size);
+            canvasHeightPercent = Math.round(size);
+          } else {
+            canvasWidthPercent = width;
+            canvasHeightPercent = height;
+          }
+
+          document.getElementById("widthSlider").value = canvasWidthPercent;
+          document.getElementById("widthValue").textContent = canvasWidthPercent + "%";
+          document.getElementById("heightSlider").value = canvasHeightPercent;
+          document.getElementById("heightValue").textContent = canvasHeightPercent + "%";
+          updateCanvasSize();
+          updatePresetButtons();
+        }
+
+        document.querySelectorAll(".preset-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const w = parseInt(btn.dataset.width);
+            const h = parseInt(btn.dataset.height);
+            const isSquare = btn.dataset.square === "true";
+            applyCanvasPreset(w, h, isSquare);
+          });
+        });
 
         // Opacity Slider
         document
