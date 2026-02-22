@@ -1972,7 +1972,7 @@
               // Save to IndexedDB if requested
               if (saveToDB && imageDB) {
                 try {
-                  await saveImageToDB(file, imageId);
+                  await saveImageToDB(file, imageId, file.name);
                 } catch (err) {
                   console.warn("Failed to save image to DB:", err);
                 }
@@ -2145,7 +2145,7 @@
                     // Fetch the blob from the object URL and save
                     const response = await fetch(images[i].url);
                     const blob = await response.blob();
-                    await saveImageToDB(blob, images[i].id);
+                    await saveImageToDB(blob, images[i].id, images[i].name);
                   }
                 } catch (err) {
                   console.warn("Failed to update image DB after reorder:", err);
@@ -2769,12 +2769,13 @@
         });
       }
 
-      function saveImageToDB(blob, id) {
+      function saveImageToDB(blob, id, name) {
         if (!imageDB) return Promise.reject('DB not open');
         return new Promise((resolve, reject) => {
           const tx = imageDB.transaction('images', 'readwrite');
           const store = tx.objectStore('images');
-          const request = store.put(blob, id);
+          // Store blob and name together
+          const request = store.put({ blob, name: name || 'image.png' }, id);
           request.onsuccess = () => resolve();
           request.onerror = () => reject(request.error);
         });
@@ -2833,15 +2834,19 @@
               // Process each blob
               try {
                 for (let i = 0; i < blobs.length; i++) {
-                  const blob = blobs[i];
+                  const data = blobs[i];
                   const id = ids[i];
-                  if (!blob) continue;
+                  if (!data) continue;
+
+                  // Extract blob and name (support both old and new format)
+                  const blob = data.blob || data;
+                  const name = data.name || `image_${i}.png`;
 
                   // Update ID counter to be higher than any existing ID
                   if (id >= imageIdCounter) imageIdCounter = id + 1;
 
                   // Convert blob to File-like object
-                  const file = new File([blob], blob.name || `image_${i}.png`, { type: blob.type || 'image/png' });
+                  const file = new File([blob], name, { type: blob.type || 'image/png' });
 
                   // Use addImage but skip DB save (already in DB)
                   await addImageFromFile(file, false, id);
