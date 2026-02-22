@@ -69,8 +69,12 @@ particles-effects/
 | `zDepth` | 2.0 (default) - Z-axis spread for particles |
 | `hueShift` | 0 (default) - hue rotation 0-1 (mapped from 0-360°) |
 | `invertColors` | false - invert all colors in fragment shader |
-| `autoRotate` | false - continuously rotate particles around Y-axis |
+| `autoRotate` | false - enable particle rotation |
+| `rotateMode` | 0-2 - rotation mode (continuous/oscillate/morph-only) |
+| `rotateAxis` | 'y' - rotation axis (x/y/z/xy/xyz) |
 | `rotateSpeed` | 0.5 (default) - rotation speed in degrees per second |
+| `rotateRange` | 180 (default) - max rotation angle for oscillate mode |
+| `rotatePivot` | 0 (default) - pivot offset percentage (0=center, 100=orbital) |
 | `autoMode` | false - auto-adjust settings based on background |
 | `transitionMode` | 0-3 - transition effect (default/spiral/explosion/gravity) |
 | `easingMode` | 0-5 - easing curve (ease-in-out/linear/ease-in/ease-out/bounce/elastic) |

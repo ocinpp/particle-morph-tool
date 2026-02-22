@@ -16,7 +16,7 @@ A Three.js application that creates stunning particle morphing effects between m
 - **Color interpolation** - smooth or snap color transitions
 - **Grayscale mode** - toggle monochrome output
 - **Invert mode** - invert all colors for negative effect
-- **Auto-rotate** - continuously rotate particles around Y-axis
+- **Advanced rotation** - multiple modes (continuous/oscillate/morph-only), axes, and orbital motion
 - **Adjustable pause duration** - control time between morph transitions
 - **Loop mode** - continuous morphing through all images with pauses
 - **Mouse/touch interaction** - attract or repel particles
@@ -65,7 +65,7 @@ The counter shows current position (e.g., "2 of 5").
 | Easing Curve | Choose animation timing curve (see below) |
 | Grayscale | Convert output to monochrome |
 | Invert Colors | Invert all colors (negative effect) |
-| Auto Rotate | Continuously rotate particles around Y-axis |
+| Auto Rotate | Enable particle rotation (see Rotation Controls below) |
 | Show FPS | Display frame rate counter in bottom right |
 | Auto (for BG) | Auto-adjust settings based on background brightness |
 | Additive Blend | Glow effect (best for dark backgrounds) |
@@ -90,13 +90,24 @@ The counter shows current position (e.g., "2 of 5").
 | Bounce | Bounces at end | Playful, elastic |
 | Elastic | Overshoots and settles | Springy, rubbery |
 
+### Rotation Controls
+
+When Auto Rotate is enabled, additional rotation options become available:
+
+| Control | Description |
+|---------|-------------|
+| Rotate Mode | **Continuous** - spin in one direction; **Oscillate** - swing back and forth; **Morph-only** - rotate only during transitions |
+| Rotate Axis | Choose which axis(es) to rotate around: X, Y, Z, XY, or XYZ |
+| Rotate Speed | Speed of rotation (degrees per second) |
+| Rotate Range | Maximum angle for oscillate mode (default 180°) |
+| Pivot Offset | Offset from center for orbital motion (0 = center spin, 100 = orbital path) |
+
 ### Sliders
 
 | Control | Range | Description |
 |---------|-------|-------------|
 | Speed | 0.2-4.0x | Animation speed multiplier |
 | Pause Duration | 0-5s | Time between morph transitions in loop mode |
-| Rotate Speed | 0.01-2.0°/s | Rotation speed when Auto Rotate is enabled |
 | Image Scale | 10-100% | Scale of the particle image |
 | Canvas Width | 20-100% | Viewport width percentage |
 | Canvas Height | 20-100% | Viewport height percentage |
