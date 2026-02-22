@@ -122,8 +122,10 @@ particles-effects/
 - Object URLs used for image loading (cleaned up on page unload or image removal)
 - Compact UI with max-height and overflow scroll for smaller screens
 - Keyboard shortcuts: Space (play/pause), Escape (toggle UI), F (fullscreen)
-- Settings persistence via localStorage (auto-save on page unload)
-- Image persistence via IndexedDB (images restored on reload)
+- Settings persistence via localStorage (auto-save with visual indicator)
+- Image persistence via IndexedDB (images and file names restored on reload)
+- Auto-save indicator (green dot flashes when settings saved)
+- Image reordering via drag & drop in list
 - FPS counter toggle for performance monitoring (bottom right)
 - Reset settings button with confirmation dialog
 - Loading spinner shown during image processing
@@ -140,7 +142,6 @@ particles-effects/
 
 ## Potential Enhancements
 
-- Image reordering via drag & drop in list
 - Customizable particle count via UI
 - Export animation as video/GIF
 - Additional transition effects

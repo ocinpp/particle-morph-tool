@@ -125,7 +125,7 @@ On touch devices:
 ### Performance
 
 - **FPS Counter** - Toggle in Animation section to show frame rate
-- **Settings Persistence** - All settings and images auto-save and restore on next visit (✓ flashes when saved)
+- **Settings Persistence** - All settings and images auto-save and restore on next visit (green ● flashes when saved)
 - **Reset Button** - Click ↺ in header to reset all settings to defaults (with confirmation)
 
 ### Auto BG Mode
