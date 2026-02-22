@@ -1100,6 +1100,16 @@
       // Performance optimization: conditional rendering
       let needsRender = true;
 
+      // Debounced save for auto-save indicator
+      let saveTimeout = null;
+      function debouncedSave() {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          saveSettings();
+          saveTimeout = null;
+        }, 1000);
+      }
+
       const vertexShader = `
             attribute vec3 aStartPosition;
             attribute vec3 aEndPosition;
@@ -1704,6 +1714,10 @@
             console.warn("Failed to initialize image DB:", err);
           }
         })();
+
+        // Auto-save when settings change (debounced)
+        document.getElementById("ui").addEventListener("input", debouncedSave);
+        document.getElementById("ui").addEventListener("change", debouncedSave);
 
         animate();
       }
