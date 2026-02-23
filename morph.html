@@ -1645,7 +1645,7 @@
 
         // Canvas size presets
         function updatePresetButtons() {
-          document.querySelectorAll(".preset-btn").forEach(btn => {
+          document.querySelectorAll(".preset-btn[data-width]").forEach(btn => {
             const w = parseInt(btn.dataset.width);
             const h = parseInt(btn.dataset.height);
             btn.classList.toggle("active", canvasWidthPercent == w && canvasHeightPercent == h);
@@ -1664,7 +1664,7 @@
           updatePresetButtons();
         }
 
-        document.querySelectorAll(".preset-btn").forEach(btn => {
+        document.querySelectorAll(".preset-btn[data-width]").forEach(btn => {
           btn.addEventListener("click", () => {
             const w = parseInt(btn.dataset.width);
             const h = parseInt(btn.dataset.height);
@@ -1737,12 +1737,12 @@
           .addEventListener("click", takeScreenshot);
 
         // Preset Buttons
-        document.querySelectorAll(".preset-btn").forEach((btn) => {
+        document.querySelectorAll(".preset-btn[data-preset]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const preset = btn.dataset.preset;
             applyPreset(preset);
-            // Update active state
-            document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+            // Update active state for visual presets only
+            document.querySelectorAll(".preset-btn[data-preset]").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
           });
         });
@@ -3138,8 +3138,17 @@
           particles.position.y = 0;
         }
 
+        // Reset preset button states
+        updatePresetButtons();
+        document.querySelectorAll(".preset-btn[data-preset]").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.preset === "default");
+        });
+
         updateCanvasSize();
         needsRender = true;
+
+        // Persist reset settings to localStorage
+        saveSettings();
         updateStatus("Settings reset to defaults");
       }
 
