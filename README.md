@@ -161,7 +161,7 @@ On touch devices:
 
 - **FPS Counter** - Toggle in Animation section to show frame rate
 - **Settings Persistence** - All settings and images auto-save and restore on next visit (green ● flashes when saved)
-- **Reset Button** - Click ↺ in header to reset all settings to defaults (with confirmation)
+- **Reset Button** - Click ↺ in header to reset all settings to defaults and persist (with confirmation)
 
 ### Auto BG Mode
 
@@ -193,7 +193,7 @@ A green "AUTO BG" indicator appears in the top right corner when active.
 - Rendering paused when tab is hidden
 - Conditional rendering (only redraws when needed)
 - Object reuse to minimize garbage collection
-- Proper cleanup on page unload (URLs revoked, WebGL context released)
+- Proper cleanup on page unload (URLs revoked, WebGL context released, IndexedDB closed)
 
 ## Browser Support
 
