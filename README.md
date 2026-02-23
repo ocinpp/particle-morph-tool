@@ -199,6 +199,16 @@ A green "AUTO BG" indicator appears in the top right corner when active.
 
 Requires WebGL 2.0. Works in modern Chrome, Firefox, Safari, and Edge.
 
+## Development
+
+This project includes AI assistant skills in `.agents/skills/` for development with Claude Code:
+- **threejs-shaders** - GLSL shaders and custom effects
+- **threejs-animation** - Animation systems
+- **threejs-fundamentals** - Scene setup and rendering
+- **frontend-design** - UI/UX patterns
+- **brainstorming** - Design exploration
+- **web-design-guidelines** - Accessibility best practices
+
 ## License
 
 MIT

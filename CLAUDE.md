@@ -10,7 +10,15 @@ Single-file Three.js application for particle morphing effects between multiple 
 particles-effects/
 ├── morph.html      # Main application (self-contained)
 ├── README.md       # User documentation
-└── CLAUDE.md       # This file
+├── CLAUDE.md       # This file
+└── .agents/        # AI assistant skills for this project
+    └── skills/
+        ├── brainstorming/       # Design exploration before implementation
+        ├── frontend-design/     # UI/UX design patterns
+        ├── threejs-fundamentals/# Three.js scene setup, cameras, renderers
+        ├── threejs-animation/   # Keyframe, skeletal, morph target animation
+        ├── threejs-shaders/     # GLSL, ShaderMaterial, custom effects
+        └── web-design-guidelines/# Web accessibility and UX best practices
 ```
 
 ## Architecture
@@ -113,6 +121,21 @@ particles-effects/
 | `saveImageToDB(blob, id)` | Save image blob to IndexedDB |
 | `deleteImageFromDB(id)` | Delete image from IndexedDB |
 | `loadImagesFromDB()` | Load all saved images from IndexedDB |
+
+## AI Assistant Skills
+
+This repository includes specialized skills for AI assistants working on this project:
+
+| Skill | Purpose |
+|-------|---------|
+| `threejs-shaders` | GLSL shaders, ShaderMaterial, uniforms, custom effects |
+| `threejs-animation` | Keyframe animation, skeletal animation, morph targets |
+| `threejs-fundamentals` | Scene setup, cameras, renderer, Object3D hierarchy |
+| `frontend-design` | UI/UX design patterns and component architecture |
+| `brainstorming` | Design exploration and requirements gathering |
+| `web-design-guidelines` | Accessibility and UX best practices |
+
+These skills are automatically available when using Claude Code in this project.
 
 ## Dependencies
 
