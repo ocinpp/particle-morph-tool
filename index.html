@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Particle Morph Tool</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- BUTTON TO RESTORE UI -->
+    <button id="restoreBtn" title="Show Controls">+</button>
+
+    <!-- AUTO MODE INDICATOR -->
+    <div id="autoIndicator">AUTO BG</div>
+
+    <!-- FPS COUNTER -->
+    <div id="fpsCounter">60 FPS</div>
+
+    <div id="ui">
+      <!-- HEADER WITH COLLAPSE BUTTON -->
+      <div class="header-container">
+        <h2>Particle Morph Tool</h2>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <span id="saveIndicator" class="save-indicator" title="Settings saved">●</span>
+          <button class="reset-btn" id="resetBtn" title="Reset Settings">↺</button>
+          <button class="collapse-btn" id="collapseBtn" title="Hide Controls">−</button>
+        </div>
+      </div>
+
+      <!-- ACCORDION SECTIONS -->
+      <div class="accordion">
+        <!-- Section 1: Images (expanded by default) -->
+        <div class="accordion-section open">
+          <button class="accordion-header" type="button">Images <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <input type="file" id="imageFileInput" accept="image/*" multiple />
+            <div class="image-list" id="imageList">
+              <!-- Dynamic image items will be added here -->
+            </div>
+            <button class="add-image-btn" id="addImageBtn">+ Add Image</button>
+            <div class="image-counter" id="imageCounter">Add 2+ images to start</div>
+          </div>
+        </div>
+
+        <!-- Section 2: Animation -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Animation <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="toggle-container">
+              <span class="toggle-label">Loop Mode:</span>
+              <label class="switch">
+                <input type="checkbox" id="loopToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Smooth Colors:</span>
+              <label class="switch">
+                <input type="checkbox" id="colorToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Transition Effect:</span>
+              <select id="transitionModeSelect">
+                <option value="0">Default Chaos</option>
+                <option value="1">Spiral Vortex</option>
+                <option value="2">Explosion</option>
+                <option value="3">Reverse Gravity</option>
+              </select>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Easing Curve:</span>
+              <select id="easingModeSelect">
+                <option value="0">Ease In-Out</option>
+                <option value="1">Linear</option>
+                <option value="2">Ease In</option>
+                <option value="3">Ease Out</option>
+                <option value="4">Bounce</option>
+                <option value="5">Elastic</option>
+              </select>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Speed:</span>
+                <span class="slider-value" id="speedValue">1.0x</span>
+              </div>
+              <input type="range" id="speedSlider" min="2" max="40" value="12" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Pause Duration:</span>
+                <span class="slider-value" id="pauseValue">2.0s</span>
+              </div>
+              <input type="range" id="pauseSlider" min="0" max="300" value="120" />
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Auto Rotate:</span>
+              <label class="switch">
+                <input type="checkbox" id="rotateToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Rotate Mode:</span>
+              <select id="rotateModeSelect">
+                <option value="0">Continuous</option>
+                <option value="1">Oscillate</option>
+                <option value="2">Morph Only</option>
+              </select>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Rotate Axis:</span>
+              <select id="rotateAxisSelect">
+                <option value="y">Y (Horizontal)</option>
+                <option value="x">X (Vertical)</option>
+                <option value="z">Z (Roll)</option>
+                <option value="xy">XY (Diagonal)</option>
+                <option value="xyz">XYZ (Tumble)</option>
+              </select>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Rotate Speed:</span>
+                <span class="slider-value" id="rotateSpeedValue">0.5°/s</span>
+              </div>
+              <input type="range" id="rotateSpeedSlider" min="1" max="200" value="50" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Rotate Range:</span>
+                <span class="slider-value" id="rotateRangeValue">±180°</span>
+              </div>
+              <input type="range" id="rotateRangeSlider" min="15" max="180" value="180" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Pivot Offset:</span>
+                <span class="slider-value" id="rotatePivotValue">0%</span>
+              </div>
+              <input type="range" id="rotatePivotSlider" min="0" max="100" value="0" />
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Show FPS:</span>
+              <label class="switch">
+                <input type="checkbox" id="fpsToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Visual FX -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Visual FX <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="toggle-container">
+              <span class="toggle-label">Grayscale:</span>
+              <label class="switch">
+                <input type="checkbox" id="grayToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Invert Colors:</span>
+              <label class="switch">
+                <input type="checkbox" id="invertToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Additive Blend:</span>
+              <label class="switch">
+                <input type="checkbox" id="blendToggle" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Opacity:</span>
+                <span class="slider-value" id="opacityValue">100%</span>
+              </div>
+              <input type="range" id="opacitySlider" min="10" max="400" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Brightness:</span>
+                <span class="slider-value" id="brightnessValue">100%</span>
+              </div>
+              <input type="range" id="brightnessSlider" min="50" max="300" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Saturation:</span>
+                <span class="slider-value" id="saturationValue">100%</span>
+              </div>
+              <input type="range" id="saturationSlider" min="0" max="300" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Hue Shift:</span>
+                <span class="slider-value" id="hueValue">0°</span>
+              </div>
+              <input type="range" id="hueSlider" min="0" max="360" value="0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Particles -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Particles <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Point Size:</span>
+                <span class="slider-value" id="pointSizeValue">3.0</span>
+              </div>
+              <input type="range" id="pointSizeSlider" min="1" max="10" value="3" step="0.5" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Z-Depth:</span>
+                <span class="slider-value" id="zDepthValue">2.0</span>
+              </div>
+              <input type="range" id="zDepthSlider" min="0" max="50" value="2" step="1" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: Mouse Interaction -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Mouse Interaction <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="toggle-container">
+              <span class="toggle-label">Mouse Mode:</span>
+              <select id="mouseModeSelect">
+                <option value="0">Off</option>
+                <option value="1">Attract</option>
+                <option value="2">Repel</option>
+              </select>
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Mouse Radius:</span>
+                <span class="slider-value" id="mouseRadiusValue">100</span>
+              </div>
+              <input type="range" id="mouseRadiusSlider" min="20" max="300" value="150" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Mouse Strength:</span>
+                <span class="slider-value" id="mouseStrengthValue">30</span>
+              </div>
+              <input type="range" id="mouseStrengthSlider" min="10" max="500" value="300" />
+            </div>
+            <div class="touch-hint">Touch: tap to attract, long press to repel</div>
+          </div>
+        </div>
+
+        <!-- Section 6: Canvas -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Canvas <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Image Scale:</span>
+                <span class="slider-value" id="scaleValue">90%</span>
+              </div>
+              <input type="range" id="scaleSlider" min="10" max="100" value="90" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Canvas Width:</span>
+                <span class="slider-value" id="widthValue">100%</span>
+              </div>
+              <input type="range" id="widthSlider" min="20" max="100" value="100" />
+            </div>
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Canvas Height:</span>
+                <span class="slider-value" id="heightValue">100%</span>
+              </div>
+              <input type="range" id="heightSlider" min="20" max="100" value="100" />
+            </div>
+            <div class="preset-buttons">
+              <button class="preset-btn active" data-width="100" data-height="100">Full</button>
+              <button class="preset-btn" data-width="100" data-height="56">16:9</button>
+              <button class="preset-btn" data-width="56" data-height="100">9:16</button>
+              <button class="preset-btn" data-width="100" data-height="100">1:1</button>
+              <button class="preset-btn" data-width="100" data-height="75">4:3</button>
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Background:</span>
+              <input type="color" id="bgColorPicker" value="#111111" />
+            </div>
+            <div class="toggle-container">
+              <span class="toggle-label">Auto (for BG):</span>
+              <label class="switch">
+                <input type="checkbox" id="autoToggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 7: Presets -->
+        <div class="accordion-section">
+          <button class="accordion-header" type="button">Presets <span class="arrow">▶</span></button>
+          <div class="accordion-content">
+            <div class="preset-container">
+              <button class="preset-btn" data-preset="default">Default</button>
+              <button class="preset-btn" data-preset="neon">Neon</button>
+              <button class="preset-btn" data-preset="pastel">Pastel</button>
+              <button class="preset-btn" data-preset="ghost">Ghost</button>
+              <button class="preset-btn" data-preset="fire">Fire</button>
+              <button class="preset-btn" data-preset="ice">Ice</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button id="morphBtn" class="action-btn start-state">Start Loop</button>
+
+      <button id="screenshotBtn" class="screenshot-btn">📷 Screenshot</button>
+
+      <div class="shortcuts-hint">
+        <kbd>Space</kbd> Play/Pause &nbsp; <kbd>Esc</kbd> Toggle UI
+      </div>
+
+      <div id="status-container">
+        <div id="status-text">Waiting for images...</div>
+      </div>
+    </div>
+
+    <!-- Drop overlay for drag & drop -->
+    <div id="dropOverlay"><span>Drop image here</span></div>
+
+    <div id="canvas-container"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
