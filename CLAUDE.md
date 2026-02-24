@@ -116,7 +116,8 @@ particles-effects/
 | `cleanup()` | Cancel animation, revoke all URLs, dispose Three.js resources, close IndexedDB |
 | `saveSettings()` | Save all settings to localStorage |
 | `loadSettings()` | Load settings from localStorage and apply to UI |
-| `resetSettings()` | Reset all settings to default values |
+| `resetSettings()` | Reset all settings to default values and persist to localStorage |
+| `updatePresetButtons()` | Update canvas preset button active states |
 | `openImageDB()` | Open/create IndexedDB for image persistence |
 | `saveImageToDB(blob, id)` | Save image blob to IndexedDB |
 | `deleteImageFromDB(id)` | Delete image from IndexedDB |
@@ -167,6 +168,24 @@ These skills are automatically available when using Claude Code in this project.
 - Color inversion toggle
 - Auto-rotate mode with adjustable speed
 - Mouse interaction with configurable radius and strength
+
+## Memory Management
+
+The application implements comprehensive cleanup to prevent memory leaks:
+
+**Tracked and Cleaned:**
+- Animation frame (cancelled on cleanup)
+- Object URLs (revoked on image removal and cleanup)
+- Event listeners for resize, mousemove, visibility, keydown, WebGL context, drag & drop, touch
+- Timeouts for save, touch, and attract interactions
+- Three.js resources (geometry, material, renderer disposed)
+- IndexedDB connection (closed on cleanup)
+- AbortController for image reprocessing
+
+**Implementation Notes:**
+- Preset buttons use attribute selectors (`[data-width]`, `[data-preset]`) to separate canvas and visual preset handlers
+- `resetSettings()` persists changes to localStorage and updates all UI states including preset buttons
+- Minor untracked setTimeout calls for status updates and save indicator (DOM-only, negligible impact)
 
 ## Potential Enhancements
 
