@@ -15,6 +15,12 @@ import { presets } from '../core/constants.js';
  */
 export function setupControls() {
   const { particles } = state;
+
+  // Set up UI handlers that don't require particles first
+  setupAccordionHandlers();
+  setupButtonHandlers();
+
+  // Only set up particle-dependent handlers if particles exist
   if (!particles) return;
 
   const uniforms = particles.material.uniforms;
@@ -294,45 +300,6 @@ export function setupControls() {
       restoreBtn.style.display = 'none';
     });
   }
-
-  // Canvas preset buttons
-  document.querySelectorAll('[data-width]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const width = parseInt(btn.dataset.width);
-      const height = parseInt(btn.dataset.height);
-
-      state.settings.canvasWidthPercent = width;
-      state.settings.canvasHeightPercent = height;
-
-      document.getElementById('widthSlider').value = width;
-      document.getElementById('widthValue').textContent = width + '%';
-      document.getElementById('heightSlider').value = height;
-      document.getElementById('heightValue').textContent = height + '%';
-
-      updateCanvasSize(width, height);
-
-      // Update active state
-      document.querySelectorAll('[data-width]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      debouncedSaveSettings();
-    });
-  });
-
-  // Preset buttons
-  document.querySelectorAll('[data-preset]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      applyPreset(btn.dataset.preset);
-    });
-  });
-
-  // Accordion sections
-  document.querySelectorAll('.accordion-header').forEach(header => {
-    header.addEventListener('click', () => {
-      const section = header.parentElement;
-      section.classList.toggle('open');
-    });
-  });
 }
 
 /**
@@ -363,6 +330,60 @@ function setupSlider(id, valueId, callback) {
   if (el) {
     el.addEventListener('input', (e) => callback(parseFloat(e.target.value)));
   }
+}
+
+/**
+ * Set up accordion section handlers
+ */
+function setupAccordionHandlers() {
+  const headers = document.querySelectorAll('.accordion-header');
+  headers.forEach(header => {
+    header.addEventListener('click', () => {
+      const section = header.parentElement;
+      section.classList.toggle('open');
+    });
+  });
+}
+
+/**
+ * Set up general button handlers
+ */
+function setupButtonHandlers() {
+  // Preset buttons
+  document.querySelectorAll('[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyPreset(btn.dataset.preset);
+    });
+  });
+
+  // Canvas size preset buttons
+  document.querySelectorAll('[data-width]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const width = parseInt(btn.dataset.width);
+      const height = parseInt(btn.dataset.height);
+
+      state.settings.canvasWidthPercent = width;
+      state.settings.canvasHeightPercent = height;
+
+      const widthSlider = document.getElementById('widthSlider');
+      const heightSlider = document.getElementById('heightSlider');
+      const widthValue = document.getElementById('widthValue');
+      const heightValue = document.getElementById('heightValue');
+
+      if (widthSlider) widthSlider.value = width;
+      if (widthValue) widthValue.textContent = width + '%';
+      if (heightSlider) heightSlider.value = height;
+      if (heightValue) heightValue.textContent = height + '%';
+
+      updateCanvasSize(width, height);
+
+      // Update active state
+      document.querySelectorAll('[data-width]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      debouncedSaveSettings();
+    });
+  });
 }
 
 /**

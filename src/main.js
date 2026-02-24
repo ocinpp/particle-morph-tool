@@ -21,7 +21,7 @@ import { createParticleSystem } from './core/particles.js';
 import { animate, stopAnimation, togglePlayback } from './core/animation.js';
 
 // Image modules
-import { setupImageHandlers, addImage } from './image/manager.js';
+import { setupImageHandlers, addImage, addImageFromFile } from './image/manager.js';
 import { openImageDB, loadImagesFromDB, closeImageDB } from './image/storage.js';
 
 // UI modules
@@ -61,7 +61,7 @@ async function init() {
   // Open IndexedDB and load saved images
   try {
     await openImageDB();
-    await loadImagesFromDB(addImage);
+    await loadImagesFromDB(addImageFromFile);
   } catch (err) {
     console.warn('IndexedDB initialization failed:', err);
   }
@@ -175,12 +175,7 @@ function setupEventHandlers() {
     });
   }
 
-  // Accordion headers
-  document.querySelectorAll('.accordion-header').forEach(header => {
-    header.addEventListener('click', () => {
-      header.parentElement.classList.toggle('open');
-    });
-  });
+  // Note: Accordion handlers are set up in setupControls() via setupAccordionHandlers()
 }
 
 /**
