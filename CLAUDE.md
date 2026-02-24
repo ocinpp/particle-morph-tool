@@ -2,16 +2,49 @@
 
 ## Project Overview
 
-Single-file Three.js application for particle morphing effects between multiple images.
+Modular Three.js application for particle morphing effects between multiple images, built with Vite for modern development workflow.
 
 ## File Structure
 
 ```
 particles-effects/
-├── morph.html      # Main application (self-contained)
-├── README.md       # User documentation
-├── CLAUDE.md       # This file
-└── .agents/        # AI assistant skills for this project
+├── index.html              # Entry point HTML
+├── src/
+│   ├── main.js             # Application entry point
+│   ├── style.css           # Global styles
+│   ├── core/               # Three.js core modules
+│   │   ├── constants.js    # Application constants
+│   │   ├── scene.js        # Scene, camera, renderer setup
+│   │   ├── particles.js    # Particle system and geometry
+│   │   └── animation.js    # Animation loop and morphing
+│   ├── shaders/
+│   │   ├── vertex.glsl     # Vertex shader
+│   │   └── fragment.glsl   # Fragment shader
+│   ├── image/
+│   │   ├── processor.js    # Image pixel extraction
+│   │   ├── manager.js      # Image list management
+│   │   └── storage.js      # IndexedDB persistence
+│   ├── state/
+│   │   ├── store.js        # Global state management
+│   │   └── settings.js     # Settings persistence (localStorage)
+│   ├── ui/
+│   │   ├── controls.js     # UI control handlers
+│   │   ├── presets.js      # Preset configurations
+│   │   └── imageList.js    # Image list UI
+│   └── interaction/
+│       ├── mouse.js        # Mouse interaction
+│       ├── touch.js        # Touch event handling
+│       ├── dragdrop.js     # Drag & drop support
+│       └── keyboard.js     # Keyboard shortcuts
+├── morph.html              # Original single-file version (reference)
+├── package.json            # Dependencies and scripts
+├── vite.config.js          # Vite configuration
+├── vitest.config.js        # Test configuration
+├── eslint.config.js        # Linting rules
+├── tsconfig.json           # TypeScript config (for IDE support)
+├── README.md               # User documentation
+├── CLAUDE.md               # This file
+└── .agents/                # AI assistant skills for this project
     └── skills/
         ├── brainstorming/       # Design exploration before implementation
         ├── frontend-design/     # UI/UX design patterns
@@ -140,13 +173,16 @@ These skills are automatically available when using Claude Code in this project.
 
 ## Dependencies
 
-- Three.js 0.160.0 (loaded via importmap from unpkg CDN)
+- Three.js (via npm, bundled with Vite)
+- Vite (build tool and dev server)
 
 ## Development Notes
 
-- Self-contained HTML file - no build step required
-- Uses ES modules for Three.js import
-- No external CSS or JS files needed
+- **Build System**: Vite for fast HMR and optimized production builds
+- **ES Modules**: Modern JavaScript modules throughout
+- **GLSL Imports**: Shaders imported as raw text via Vite plugin
+- **Testing**: Vitest for unit tests
+- **Linting**: ESLint with modern flat config
 - Images processed via canvas getImageData()
 - Object URLs used for image loading (cleaned up on page unload or image removal)
 - Compact UI with max-height and overflow scroll for smaller screens
@@ -186,6 +222,16 @@ The application implements comprehensive cleanup to prevent memory leaks:
 - Preset buttons use attribute selectors (`[data-width]`, `[data-preset]`) to separate canvas and visual preset handlers
 - `resetSettings()` persists changes to localStorage and updates all UI states including preset buttons
 - Minor untracked setTimeout calls for status updates and save indicator (DOM-only, negligible impact)
+
+## Development Commands
+
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Start development server (localhost:3000) |
+| `npm run build` | Build for production (outputs to dist/) |
+| `npm run preview` | Preview production build locally |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run Vitest tests |
 
 ## Potential Enhancements
 

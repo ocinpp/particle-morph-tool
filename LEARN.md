@@ -42,26 +42,39 @@ renderer.setPixelRatio(window.devicePixelRatio);  // For sharp rendering on HiDP
 - `devicePixelRatio` ensures crisp rendering on Retina displays
 - Objects at z=0 need the camera to be positioned back (positive z) to be visible
 
-### Import Maps (ES Modules)
+### ES Modules with Vite
 
-```html
-<script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-    }
+This project uses Vite for modern module bundling:
+
+```javascript
+// Install Three.js via npm
+// npm install three
+
+// Import in your code
+import * as THREE from 'three';
+import { createScene } from './core/scene.js';
+import vertexShader from './shaders/vertex.glsl?raw';
+```
+
+**Vite Configuration** (`vite.config.js`):
+```javascript
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  server: {
+    port: 3000
+  },
+  build: {
+    outDir: 'dist'
   }
-</script>
-
-<script type="module">
-  import * as THREE from "three";
-</script>
+});
 ```
 
 **Key Learnings:**
-- Import maps allow bare module specifiers in browsers
-- No build step (bundler) required for simple projects
-- Uses ES modules (`type="module"`) instead of UMD scripts
+- Vite provides fast Hot Module Replacement (HMR) during development
+- Bare module specifiers work without import maps (Vite resolves them)
+- GLSL shaders imported with `?raw` suffix for text content
+- Production builds are optimized and minified automatically
 
 ---
 
