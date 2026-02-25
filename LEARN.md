@@ -749,21 +749,31 @@ document.getElementById("slider").addEventListener("input", (e) => {
 
 ```javascript
 document.addEventListener("keydown", (e) => {
-    // Ignore if user is typing in an input field
-    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    // Allow ESC to work regardless of focus (handle first)
+    if (e.code === "Escape") {
+        e.preventDefault();
+        toggleUI();
+        return;
+    }
+
+    // Ignore if user is typing in a text input (but not range/checkbox)
+    const isTextInput = e.target.tagName === "INPUT" &&
+        !["checkbox", "radio", "file", "range"].includes(e.target.type);
+    const isSelect = e.target.tagName === "SELECT";
+    const isTextarea = e.target.tagName === "TEXTAREA";
+    if (isTextInput || isSelect || isTextarea) return;
 
     if (e.code === "Space") {
         e.preventDefault();  // Prevent page scroll
         togglePlay();
-    } else if (e.code === "Escape") {
-        e.preventDefault();
-        toggleUI();
     }
 });
 ```
 
 **Key Learnings:**
-- Check `e.target.tagName` to avoid triggering when typing
+- Handle ESC first, before input checks, so it always works (e.g., to restore hidden UI)
+- Check `e.target.tagName` to avoid triggering when typing in text fields
+- Exclude non-text inputs (range sliders, checkboxes) from the block list
 - `e.preventDefault()` stops default browser behavior (e.g., space scrolls page)
 - Use `e.code` for physical key detection (locale-independent)
 

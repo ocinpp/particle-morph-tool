@@ -21,7 +21,7 @@ import { createParticleSystem } from './core/particles.js';
 import { animate, stopAnimation, togglePlayback } from './core/animation.js';
 
 // Image modules
-import { setupImageHandlers, addImage, addImageFromFile } from './image/manager.js';
+import { setupImageHandlers, addImageFromFile } from './image/manager.js';
 import { openImageDB, loadImagesFromDB, closeImageDB } from './image/storage.js';
 
 // UI modules

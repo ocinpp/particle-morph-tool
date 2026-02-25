@@ -9,18 +9,24 @@ import { togglePlayback } from '../core/animation.js';
  */
 export function setupKeyboardHandlers() {
   const handler = (e) => {
-    // Ignore if typing in an input
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    // Allow ESC to work regardless of focus
+    if (e.code === 'Escape') {
+      e.preventDefault();
+      toggleUI();
+      return;
+    }
+
+    // Ignore if typing in a text input
+    const isTextInput = e.target.tagName === 'INPUT' &&
+      !['checkbox', 'radio', 'file', 'range'].includes(e.target.type);
+    const isSelect = e.target.tagName === 'SELECT';
+    const isTextarea = e.target.tagName === 'TEXTAREA';
+    if (isTextInput || isSelect || isTextarea) return;
 
     switch (e.code) {
       case 'Space':
         e.preventDefault();
         togglePlayback();
-        break;
-
-      case 'Escape':
-        e.preventDefault();
-        toggleUI();
         break;
 
       case 'KeyF':
