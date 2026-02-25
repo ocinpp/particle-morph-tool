@@ -28,12 +28,31 @@ A Three.js application that creates stunning particle morphing effects between m
 - **Auto BG mode** - automatically adjust settings based on background color
 - **Error handling** - graceful recovery from WebGL context loss
 
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+The dev server runs at `http://localhost:3000` by default.
+
 ## Usage
 
-1. Open `morph.html` in a modern browser
-2. Click **+ Add Image** to upload images (or drag & drop)
-3. Add at least **2 images** to enable morphing
-4. Click **Start Loop** to begin cycling through images
+1. Start the dev server with `npm run dev`
+2. Open the displayed URL in your browser
+3. Click **+ Add Image** to upload images (or drag & drop)
+4. Add at least **2 images** to enable morphing
+5. Click **Start Loop** to begin cycling through images
 
 ### Image Tips
 
@@ -181,7 +200,8 @@ A green "AUTO BG" indicator appears in the top right corner when active.
 
 ## Technical Details
 
-- **Framework**: Three.js (via CDN)
+- **Framework**: Three.js (via npm, bundled with Vite)
+- **Build Tool**: Vite
 - **Particle Count**: 100,000
 - **Easing**: Cubic ease-in-out
 - **Blend Mode**: Additive or Normal (configurable)
