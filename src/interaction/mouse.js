@@ -27,10 +27,11 @@ export function setupMouseInteraction() {
     state.mouse.y = -(y / rect.height) * 2 + 1;
 
     // Convert to world coordinates
-    const vector = state.mouseVector.copy(state.mouse);
-    vector.unproject(state.camera);
+    // Use z=0.5 in NDC space (middle of frustum) for proper unprojection
+    state.mouseVector.set(state.mouse.x, state.mouse.y, 0.5);
+    state.mouseVector.unproject(state.camera);
 
-    const dir = vector.sub(state.camera.position).normalize();
+    const dir = state.mouseVector.sub(state.camera.position).normalize();
     const distance = -state.camera.position.z / dir.z;
     const pos = state.camera.position.clone().add(dir.multiplyScalar(distance));
 

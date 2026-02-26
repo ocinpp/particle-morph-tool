@@ -13,7 +13,7 @@ import './style.css';
 // Core modules
 import { defaultSettings } from './core/constants.js';
 import { state, initializeProcessCanvas } from './state/store.js';
-import { loadSettings, debouncedSaveSettings } from './state/settings.js';
+import { loadSettings, debouncedSaveSettings, clearDebouncedSaveTimeout } from './state/settings.js';
 
 // Scene modules
 import { createScene, updateCanvasSize, setBackgroundColor, disposeScene } from './core/scene.js';
@@ -471,10 +471,25 @@ function cleanup() {
   // Close IndexedDB
   closeImageDB();
 
-  // Clear timeouts
+  // Clear all timeouts
   Object.values(state.timeouts).forEach(timeout => {
     if (timeout) clearTimeout(timeout);
   });
+  clearDebouncedSaveTimeout();
+
+  // Abort any pending image reprocessing
+  if (state.reprocessAbortController) {
+    state.reprocessAbortController.abort();
+    state.reprocessAbortController = null;
+  }
+
+  // Clean up processing canvas
+  if (state.processCanvas) {
+    state.processCanvas.width = 1;
+    state.processCanvas.height = 1;
+    state.processCanvas = null;
+    state.processCtx = null;
+  }
 }
 
 // Register cleanup on page unload

@@ -205,6 +205,13 @@ These skills are automatically available when using Claude Code in this project.
 - Auto-rotate mode with adjustable speed
 - Mouse interaction with configurable radius and strength
 
+## Known Implementation Details
+
+**Mouse World Position Calculation** (`src/interaction/mouse.js`):
+- Screen coordinates are converted to NDC (-1 to 1), then unprojected to world coordinates
+- Uses `Vector3.set(x, y, 0.5)` before unproject - the z=0.5 is required for proper NDC-to-world conversion
+- The world position is calculated by finding the intersection of the mouse ray with the z=0 plane (particle plane)
+
 ## Memory Management
 
 The application implements comprehensive cleanup to prevent memory leaks:
@@ -213,15 +220,16 @@ The application implements comprehensive cleanup to prevent memory leaks:
 - Animation frame (cancelled on cleanup)
 - Object URLs (revoked on image removal and cleanup)
 - Event listeners for resize, mousemove, visibility, keydown, WebGL context, drag & drop, touch
-- Timeouts for save, touch, and attract interactions
+- Timeouts for save indicator, touch interactions, and debounced settings save
 - Three.js resources (geometry, material, renderer disposed)
 - IndexedDB connection (closed on cleanup)
-- AbortController for image reprocessing
+- AbortController for image reprocessing (aborted on cleanup)
+- Processing canvas (cleaned up on page unload)
 
 **Implementation Notes:**
 - Preset buttons use attribute selectors (`[data-width]`, `[data-preset]`) to separate canvas and visual preset handlers
 - `resetSettings()` persists changes to localStorage and updates all UI states including preset buttons
-- Minor untracked setTimeout calls for status updates and save indicator (DOM-only, negligible impact)
+- Screenshot timeouts are short-lived (100-2000ms) and DOM-only, cleaned up naturally by browser on page unload
 
 ## Development Commands
 

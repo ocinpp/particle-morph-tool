@@ -332,12 +332,13 @@ const mouseWorld = new THREE.Vector3();
 const mouseVector = new THREE.Vector3(); // Reusable to avoid allocation
 
 document.addEventListener("mousemove", (e) => {
-    // Normalize to -1 to 1 range
+    // Normalize to -1 to 1 range (NDC - Normalized Device Coordinates)
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     // Project to z-plane where particles live (reuse mouseVector)
+    // IMPORTANT: Use z=0.5 in NDC space (middle of frustum) for proper unprojection
     mouseVector.set(mouse.x, mouse.y, 0.5);
     mouseVector.unproject(camera);
     const dir = mouseVector.sub(camera.position).normalize();
@@ -348,7 +349,8 @@ document.addEventListener("mousemove", (e) => {
 
 **Key Learnings:**
 - `unproject()` converts screen coordinates to 3D ray
-- Divide by `dir.z` to find where ray intersects the particle plane
+- **Use `Vector3.set(x, y, 0.5)` not `Vector3.copy(Vector2)`** - the z=0.5 is required for proper NDC-to-world conversion (Vector2 only has x,y, leaving z undefined which causes NaN results)
+- Divide by `dir.z` to find where ray intersects the particle plane (z=0)
 - Mouse position updates are throttled for performance
 - **Reuse Vector3 objects** to avoid garbage collection from creating new objects every frame
 
@@ -612,11 +614,71 @@ function handleTap() {
 }
 ```
 
+**For module-level timeouts, export a cleanup function:**
+
+```javascript
+// settings.js - module-level timeout
+let debouncedSaveTimeout = null;
+
+export function debouncedSaveSettings() {
+    if (debouncedSaveTimeout) {
+        clearTimeout(debouncedSaveTimeout);
+    }
+    debouncedSaveTimeout = setTimeout(() => {
+        saveSettings();
+        debouncedSaveTimeout = null;
+    }, 300);
+}
+
+// Export cleanup function for use in main cleanup
+export function clearDebouncedSaveTimeout() {
+    if (debouncedSaveTimeout) {
+        clearTimeout(debouncedSaveTimeout);
+        debouncedSaveTimeout = null;
+    }
+}
+
+// main.js - call during cleanup
+import { clearDebouncedSaveTimeout } from './state/settings.js';
+
+function cleanup() {
+    // ... other cleanup ...
+    clearDebouncedSaveTimeout();
+}
+```
+
 **Key Learnings:**
 - Rapid user interactions can create multiple timers
 - Always track timeout IDs for cleanup
 - `clearTimeout()` before creating new timer prevents accumulation
 - Set variable to `null` after timer fires for explicit cleanup
+- For module-level timeouts, export a cleanup function
+
+### AbortController for Async Operations
+
+```javascript
+// Track AbortController for cancellable async operations
+state.reprocessAbortController = new AbortController();
+const signal = state.reprocessAbortController.signal;
+
+for (let index = 0; index < images.length; index++) {
+    if (signal.aborted) return;  // Check if cancelled
+    // ... process image ...
+}
+
+// Clean up on page unload
+function cleanup() {
+    if (state.reprocessAbortController) {
+        state.reprocessAbortController.abort();
+        state.reprocessAbortController = null;
+    }
+}
+```
+
+**Key Learnings:**
+- Use `AbortController` to cancel long-running async operations
+- Check `signal.aborted` in loops to exit early
+- Always abort and nullify during cleanup
 
 ### Data URL Cleanup
 
@@ -639,6 +701,36 @@ function takeScreenshot() {
 - `toDataURL()` creates a base64 string that can be several MB
 - Clear `href` and nullify link after download to help GC
 - For frequent screenshots, consider using `canvas.toBlob()` instead
+
+### Processing Canvas Cleanup
+
+```javascript
+// Create processing canvas lazily
+function initializeProcessCanvas() {
+    if (!state.processCanvas) {
+        state.processCanvas = document.createElement('canvas');
+        state.processCtx = state.processCanvas.getContext('2d');
+    }
+}
+
+// Clean up during application shutdown
+function cleanup() {
+    // ... other cleanup ...
+
+    // Clean up processing canvas to release memory
+    if (state.processCanvas) {
+        state.processCanvas.width = 1;  // Minimize memory
+        state.processCanvas.height = 1;
+        state.processCanvas = null;
+        state.processCtx = null;
+    }
+}
+```
+
+**Key Learnings:**
+- Off-screen canvases consume memory proportional to their size
+- Setting width/height to 1 releases the pixel buffer
+- Nullify references to help garbage collection
 
 ### Image Loading Error Handling
 

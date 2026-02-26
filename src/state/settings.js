@@ -3,6 +3,10 @@
  */
 import { SETTINGS_STORAGE_KEY } from '../core/constants.js';
 import { state, getSettings, applySettings, resetState } from './store.js';
+import { updateUniformsFromSettings } from '../shaders/uniforms.js';
+
+// Module-level timeout for debounced save (tracked for cleanup)
+let debouncedSaveTimeout = null;
 
 /**
  * Save current settings to localStorage
@@ -25,15 +29,24 @@ export function saveSettings() {
 /**
  * Debounced save settings (prevents excessive saves)
  */
-let saveTimeout = null;
 export function debouncedSaveSettings() {
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
+  if (debouncedSaveTimeout) {
+    clearTimeout(debouncedSaveTimeout);
   }
-  saveTimeout = setTimeout(() => {
+  debouncedSaveTimeout = setTimeout(() => {
     saveSettings();
-    saveTimeout = null;
+    debouncedSaveTimeout = null;
   }, 300);
+}
+
+/**
+ * Clear the debounced save timeout (for cleanup)
+ */
+export function clearDebouncedSaveTimeout() {
+  if (debouncedSaveTimeout) {
+    clearTimeout(debouncedSaveTimeout);
+    debouncedSaveTimeout = null;
+  }
 }
 
 /**
@@ -47,6 +60,11 @@ export function loadSettings() {
     const settings = JSON.parse(saved);
     applySettings(settings);
     updateUIFromSettings();
+
+    // Update shader uniforms from loaded settings
+    if (state.particles) {
+      updateUniformsFromSettings(state.particles.material.uniforms, settings);
+    }
   } catch (e) {
     console.warn('Failed to load settings:', e);
   }
