@@ -8,6 +8,20 @@ import { togglePlayback } from '../core/animation.js';
  * Set up keyboard event handlers
  */
 export function setupKeyboardHandlers() {
+  // Handle fullscreen changes (including native ESC to exit fullscreen)
+  const fullscreenHandler = () => {
+    const ui = document.getElementById('ui');
+    const restoreBtn = document.getElementById('restoreBtn');
+
+    if (!document.fullscreenElement) {
+      // Exited fullscreen - show UI
+      if (ui) ui.classList.remove('hidden');
+      if (restoreBtn) restoreBtn.style.display = 'none';
+    }
+  };
+  document.addEventListener('fullscreenchange', fullscreenHandler);
+  state.boundHandlers.fullscreenchange = fullscreenHandler;
+
   const handler = (e) => {
     // Allow ESC to work regardless of focus
     if (e.code === 'Escape') {
@@ -74,6 +88,10 @@ export function removeKeyboardHandlers() {
     document.removeEventListener('keydown', state.boundHandlers.keydown);
     state.boundHandlers.keydown = null;
   }
+  if (state.boundHandlers.fullscreenchange) {
+    document.removeEventListener('fullscreenchange', state.boundHandlers.fullscreenchange);
+    state.boundHandlers.fullscreenchange = null;
+  }
 }
 
 /**
@@ -92,15 +110,24 @@ function toggleUI() {
 }
 
 /**
- * Toggle fullscreen mode
+ * Toggle fullscreen mode (presentation mode - hides all UI)
  */
 function toggleFullscreen() {
+  const ui = document.getElementById('ui');
+  const restoreBtn = document.getElementById('restoreBtn');
+
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(err => {
       console.warn('Fullscreen error:', err);
     });
+    // Hide all UI for clean presentation mode
+    if (ui) ui.classList.add('hidden');
+    if (restoreBtn) restoreBtn.style.display = 'none';
   } else {
     document.exitFullscreen();
+    // Show UI when exiting fullscreen
+    if (ui) ui.classList.remove('hidden');
+    if (restoreBtn) restoreBtn.style.display = 'none';
   }
 }
 

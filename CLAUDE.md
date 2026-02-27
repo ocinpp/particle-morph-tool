@@ -186,7 +186,7 @@ These skills are automatically available when using Claude Code in this project.
 - Images processed via canvas getImageData()
 - Object URLs used for image loading (cleaned up on page unload or image removal)
 - Compact UI with max-height and overflow scroll for smaller screens
-- Keyboard shortcuts: Space (play/pause), Escape (toggle UI), F (fullscreen)
+- Keyboard shortcuts: Space (play/pause), Escape (toggle UI), F (fullscreen presentation mode - hides all UI)
 - Settings persistence via localStorage (auto-save with visual indicator)
 - Image persistence via IndexedDB (images and file names restored on reload)
 - Auto-save indicator (green dot flashes when settings saved)

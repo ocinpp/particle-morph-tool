@@ -174,7 +174,10 @@ On touch devices:
 |-----|--------|
 | `Space` | Play/Pause animation |
 | `Escape` | Toggle UI panel visibility |
-| `F` | Toggle fullscreen mode |
+| `F` | Toggle fullscreen presentation mode (hides all UI) |
+| `←`/`→` | Navigate to previous/next image (when paused) |
+| `R` | Reset view to default |
+| `Ctrl/Cmd+S` | Take screenshot |
 
 ### Performance
 
