@@ -89,11 +89,41 @@ void main() {
         float power = sin(p * 3.14159) * 200.0 * aRandomOffset;
         vec3 dir = normalize(pos + vec3(0.001));
         pos += dir * power;
-    } else {
+    } else if (uTransitionMode < 3.5) {
         // REVERSE GRAVITY (Fireworks)
         float peak = sin(p * 3.14159);
         vec3 up = vec3(pos.x * 0.3, 100.0, pos.z * 0.3);
         pos += up * peak * aRandomOffset;
+    } else {
+        // SAND DROP
+        // Particles fall to floor, then rise to form next image
+        float floorY = -250.0; // Floor level
+
+        // Phase timing: drop takes 40% of transition, rise takes 60%
+        float dropEnd = 0.4;
+
+        // Random delay for each particle (staggered falling)
+        float particleDelay = aRandomOffset * 0.2;
+        float adjustedP = clamp((p - particleDelay) / (1.0 - particleDelay), 0.0, 1.0);
+
+        if (adjustedP < dropEnd) {
+            // DROP PHASE: Fall with gravity acceleration
+            float dropProgress = adjustedP / dropEnd;
+            // Quadratic easing for gravity effect (acceleration)
+            float fallDistance = dropProgress * dropProgress * (aStartPosition.y - floorY);
+            pos.y = aStartPosition.y - fallDistance;
+            // Add slight horizontal drift during fall
+            pos.x += (noise(vec3(aRandomOffset * 100.0, 0.0, 0.0)) - 0.5) * dropProgress * 20.0;
+            pos.z += (noise(vec3(0.0, aRandomOffset * 100.0, 0.0)) - 0.5) * dropProgress * 20.0;
+        } else {
+            // RISE PHASE: Form into target image
+            float riseProgress = (adjustedP - dropEnd) / (1.0 - dropEnd);
+            // Smooth ease-out for rising
+            float riseEased = 1.0 - pow(1.0 - riseProgress, 2.0);
+            pos.y = mix(floorY, aEndPosition.y, riseEased);
+            pos.x = mix(aStartPosition.x + (noise(vec3(aRandomOffset * 100.0, 0.0, 0.0)) - 0.5) * 20.0, aEndPosition.x, riseEased);
+            pos.z = mix(aStartPosition.z + (noise(vec3(0.0, aRandomOffset * 100.0, 0.0)) - 0.5) * 20.0, aEndPosition.z, riseEased);
+        }
     }
 
     // Mouse interaction
