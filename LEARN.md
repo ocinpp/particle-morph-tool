@@ -283,7 +283,7 @@ function animate() {
 The vertex shader supports multiple transition effects controlled by a uniform:
 
 ```glsl
-uniform float uTransitionMode;  // 0=default, 1=spiral, 2=explosion, 3=gravity
+uniform float uTransitionMode;  // 0=default, 1=spiral, 2=explosion, 3=gravity, 4=sand, 5=explode-assemble
 
 // Apply effect based on mode
 if (uTransitionMode < 0.5) {
@@ -304,11 +304,34 @@ if (uTransitionMode < 0.5) {
     float power = sin(p * 3.14159) * 200.0 * aRandomOffset;
     vec3 dir = normalize(pos + vec3(0.001));
     pos += dir * power;
-} else {
+} else if (uTransitionMode < 3.5) {
     // REVERSE GRAVITY: float upward
     float peak = sin(p * 3.14159);
     vec3 up = vec3(pos.x * 0.3, 100.0, pos.z * 0.3);
     pos += up * peak * aRandomOffset;
+} else if (uTransitionMode < 4.5) {
+    // SAND DROP: particles fall then rise
+    float floorY = -250.0;
+    float dropEnd = 0.4;
+    float particleDelay = aRandomOffset * 0.2;
+    float adjustedP = clamp((p - particleDelay) / (1.0 - particleDelay), 0.0, 1.0);
+
+    if (adjustedP < dropEnd) {
+        // Fall with gravity (quadratic acceleration)
+        float dropProgress = adjustedP / dropEnd;
+        float fallDistance = dropProgress * dropProgress * (aStartPosition.y - floorY);
+        pos.y = aStartPosition.y - fallDistance;
+    } else {
+        // Rise to target
+        float riseProgress = (adjustedP - dropEnd) / (1.0 - dropEnd);
+        float riseEased = 1.0 - pow(1.0 - riseProgress, 2.0);
+        pos.y = mix(floorY, aEndPosition.y, riseEased);
+    }
+} else {
+    // EXPLODE & REASSEMBLE: three-phase dramatic effect
+    // Phase 1 (0-0.3): Explode outward
+    // Phase 2 (0.3-0.45): Drift/scatter
+    // Phase 3 (0.45-1.0): Spiral pull to target
 }
 ```
 
@@ -318,6 +341,38 @@ if (uTransitionMode < 0.5) {
 - Polar coordinates (radius, angle) enable rotation effects
 - `normalize()` creates direction vectors for radial effects
 - `aRandomOffset` adds per-particle variation to effects
+- Multi-phase transitions use nested `if/else` based on progress value
+- Gravity effects use quadratic easing (`t * t`) for realistic acceleration
+
+### Multi-Phase Transitions
+
+Complex transitions like Sand Drop and Explode & Reassemble use multiple phases:
+
+```glsl
+// Example: Three-phase transition
+if (p < 0.3) {
+    // PHASE 1: Explode - use accelerating ease
+    float phaseProgress = p / 0.3;
+    float eased = phaseProgress * phaseProgress;  // Ease-in (accelerate)
+    pos = startPos + direction * eased * maxDistance;
+} else if (p < 0.45) {
+    // PHASE 2: Drift - particles float/oscillate
+    float driftTime = (p - 0.3) / 0.15;
+    pos = scatteredPosition;
+    pos.x += sin(uTime * 2.0 + offset) * 10.0 * driftTime;
+} else {
+    // PHASE 3: Reassemble - use decelerating ease
+    float phaseProgress = (p - 0.45) / 0.55;
+    float eased = 1.0 - pow(1.0 - phaseProgress, 3.0);  // Ease-out (decelerate)
+    pos = mix(scatteredPosition, endPosition, eased);
+}
+```
+
+**Key Learnings:**
+- Divide transition into logical phases with fixed boundaries
+- Use different easing per phase (accelerate on explode, decelerate on land)
+- `uTime` uniform enables continuous animation during drift phases
+- `mix()` smoothly interpolates between phase start/end positions
 
 ---
 

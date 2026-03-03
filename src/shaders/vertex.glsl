@@ -89,11 +89,90 @@ void main() {
         float power = sin(p * 3.14159) * 200.0 * aRandomOffset;
         vec3 dir = normalize(pos + vec3(0.001));
         pos += dir * power;
-    } else {
+    } else if (uTransitionMode < 3.5) {
         // REVERSE GRAVITY (Fireworks)
         float peak = sin(p * 3.14159);
         vec3 up = vec3(pos.x * 0.3, 100.0, pos.z * 0.3);
         pos += up * peak * aRandomOffset;
+    } else if (uTransitionMode < 4.5) {
+        // SAND DROP
+        // Particles fall to floor, then rise to form next image
+        float floorY = -250.0; // Floor level
+
+        // Phase timing: drop takes 40% of transition, rise takes 60%
+        float dropEnd = 0.4;
+
+        // Random delay for each particle (staggered falling)
+        float particleDelay = aRandomOffset * 0.2;
+        float adjustedP = clamp((p - particleDelay) / (1.0 - particleDelay), 0.0, 1.0);
+
+        if (adjustedP < dropEnd) {
+            // DROP PHASE: Fall with gravity acceleration
+            float dropProgress = adjustedP / dropEnd;
+            // Quadratic easing for gravity effect (acceleration)
+            float fallDistance = dropProgress * dropProgress * (aStartPosition.y - floorY);
+            pos.y = aStartPosition.y - fallDistance;
+            // Add slight horizontal drift during fall
+            pos.x += (noise(vec3(aRandomOffset * 100.0, 0.0, 0.0)) - 0.5) * dropProgress * 20.0;
+            pos.z += (noise(vec3(0.0, aRandomOffset * 100.0, 0.0)) - 0.5) * dropProgress * 20.0;
+        } else {
+            // RISE PHASE: Form into target image
+            float riseProgress = (adjustedP - dropEnd) / (1.0 - dropEnd);
+            // Smooth ease-out for rising
+            float riseEased = 1.0 - pow(1.0 - riseProgress, 2.0);
+            pos.y = mix(floorY, aEndPosition.y, riseEased);
+            pos.x = mix(aStartPosition.x + (noise(vec3(aRandomOffset * 100.0, 0.0, 0.0)) - 0.5) * 20.0, aEndPosition.x, riseEased);
+            pos.z = mix(aStartPosition.z + (noise(vec3(0.0, aRandomOffset * 100.0, 0.0)) - 0.5) * 20.0, aEndPosition.z, riseEased);
+        }
+    } else {
+        // EXPLODE & REASSEMBLE
+        // Particles explode outward, drift, then get pulled back into new shape
+        vec3 center = vec3(0.0, 0.0, 0.0);
+        vec3 dirFromCenter = normalize(aStartPosition - center + vec3(0.001));
+        float distFromCenter = length(aStartPosition - center);
+
+        // Calculate scattered position (where particles end up after explosion)
+        vec3 scatteredPos = aStartPosition + dirFromCenter * 250.0 * (0.5 + aRandomOffset);
+        scatteredPos.y -= 80.0 * aRandomOffset; // Gravity drop on scattered particles
+
+        if (p < 0.3) {
+            // PHASE 1: EXPLODE - Burst outward with arc
+            float explodeProgress = p / 0.3;
+            float explodeEased = explodeProgress * explodeProgress; // Accelerate
+            float burstDist = explodeEased * 250.0 * (0.5 + aRandomOffset);
+            pos = aStartPosition + dirFromCenter * burstDist;
+            // Add downward arc during explosion
+            pos.y -= explodeProgress * explodeProgress * 60.0 * aRandomOffset;
+            // Add some spin during explosion
+            float spinAngle = explodeProgress * 3.14159 * aRandomOffset;
+            pos.x += sin(spinAngle) * explodeProgress * 30.0;
+            pos.z += cos(spinAngle) * explodeProgress * 30.0;
+        } else if (p < 0.45) {
+            // PHASE 2: DRIFT - Floating scattered particles
+            float driftTime = (p - 0.3) / 0.15;
+            pos = scatteredPos;
+            // Gentle floating motion
+            pos.x += sin(uTime * 2.0 + aRandomOffset * 10.0) * 10.0 * driftTime;
+            pos.y += cos(uTime * 1.5 + aRandomOffset * 8.0) * 8.0 * driftTime;
+            pos.z += sin(uTime * 1.8 + aRandomOffset * 12.0) * 10.0 * driftTime;
+        } else {
+            // PHASE 3: REASSEMBLE - Spiral pull toward target
+            float reassembleProgress = (p - 0.45) / 0.55;
+            // Ease-out for smooth arrival
+            float reassembleEased = 1.0 - pow(1.0 - reassembleProgress, 3.0);
+
+            // Spiral inward effect
+            float spiralAngle = (1.0 - reassembleProgress) * 6.28 * 1.5;
+            vec3 spiralOffset = vec3(
+                sin(spiralAngle + aRandomOffset * 6.28) * (1.0 - reassembleProgress) * 60.0,
+                cos(spiralAngle * 0.7 + aRandomOffset * 3.14) * (1.0 - reassembleProgress) * 40.0,
+                sin(spiralAngle * 0.5 + aRandomOffset * 4.0) * (1.0 - reassembleProgress) * 60.0
+            );
+
+            // Mix from scattered to target with spiral
+            pos = mix(scatteredPos, aEndPosition, reassembleEased);
+            pos += spiralOffset;
+        }
     }
 
     // Mouse interaction

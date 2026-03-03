@@ -97,6 +97,8 @@ The counter shows current position (e.g., "2 of 5").
 | Spiral Vortex | Particles spin around center axis with Z-wave |
 | Explosion | Particles burst outward then reform |
 | Reverse Gravity | Particles float upward like fireworks |
+| Sand Drop | Particles fall with gravity, then rise to form next image |
+| Explode & Reassemble | Particles explode, drift, then spiral into new shape |
 
 ### Easing Curves
 
