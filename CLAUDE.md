@@ -71,11 +71,13 @@ particles-effects/
 **Vertex Shader**
 - Position interpolation with cubic easing
 - Per-particle delay via `aRandomOffset * MAX_DELAY`
-- Four transition effects controlled by `uTransitionMode`:
+- Six transition effects controlled by `uTransitionMode`:
   - Mode 0 (Default): Chaos/swirl noise during transition
   - Mode 1 (Spiral Vortex): Rotating particles around center axis with Z-wave
   - Mode 2 (Explosion): Radial burst outward then reform
   - Mode 3 (Reverse Gravity): Upward float like fireworks
+  - Mode 4 (Sand Drop): Particles fall with gravity, then rise to form next image
+  - Mode 5 (Explode & Reassemble): Particles explode, drift, then spiral into new shape
 - Mouse interaction (attract/repel)
 - Color blending based on progress
 
